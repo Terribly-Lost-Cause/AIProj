@@ -1,6 +1,6 @@
 /*
  * 'require' is similar to import used in Java and Python. It brings in the libraries required to be used
- * in this JS file. Hi There
+ * in this JS file. Hi There! Version 2
  * */
 const express = require('express');
 const session = require('express-session');
