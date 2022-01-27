@@ -1,0 +1,45 @@
+<style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+</style>
+
+<div>
+    {{#if user}}
+    <table>
+    <tr>
+        <th>Name</th>
+        <th>Mobile Number</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    {{#each user}}
+    <tr>
+        <td>{{dataValues.name}}</td>
+        <td>{{dataValues.mobileNum}}</td>
+        <td>{{dataValues.type}}</td>
+        {{#if dataValues.status}}
+        <td>Active</td>
+        <td><a href="/user/updatestatus/{{dataValues.userId}}"><button>Deactivate</button></a></td>
+        {{else}}
+        <td>Inactive</td>
+        <td><a href="/user/updatestatus/{{dataValues.userId}}"><button>Activate</button></a></td>
+        {{/if}}
+    </tr>
+    {{/each}}
+    </table>
+    {{/if}}
+</div>

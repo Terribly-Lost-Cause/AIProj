@@ -1,0 +1,83 @@
+<style>
+body {font-family: Arial, Helvetica, sans-serif;}
+
+/* Full-width input fields */
+input[type=text], input[type=password] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* Set a style for all buttons */
+button {
+  background-color: #04AA6D;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+/* Center the image and position the close button */
+.imgcontainer {
+  text-align: center;
+}
+
+img.logo {
+  margin-top: 5%;
+  width: 40%;
+  border-radius: 50%;
+}
+
+.container {
+  padding: 16px;
+}
+
+span.psw {
+  float: right;
+  padding-top: 16px;
+}
+
+/* Modal Content/Box */
+.modal-content {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  width: 50%;
+}
+</style>
+
+<form class="modal-content animate" method="post">
+  <div class="imgcontainer">
+    <img src="/img/logo.png" alt="Logo" class="logo">
+  </div>
+
+  <div class="container">
+    {{#if errors}}
+    <div class="alert alert-danger" style="text-align: center;">{{errors}}</div>
+    {{/if}}
+    <label for="username"><b>Username</b></label>
+    {{#if name}}
+    <input type="text" placeholder="Enter Username" name="username" value = {{name}}>
+    {{else}}
+    <input type="text" placeholder="Enter Username" name="username" required>
+    {{/if}}
+    
+
+    <label for="password"><b>Password</b></label>
+    <input type="password" placeholder="Enter Password" name="password" required>
+      
+    <button type="submit">Login</button>
+  </div>
+</form>
