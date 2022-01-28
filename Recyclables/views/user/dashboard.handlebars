@@ -6,8 +6,11 @@
   
   <style>
   /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
-  .row.content {height: 550px}
-  
+  .row.content {
+    height: 550px; 
+  }
+  .col-sm-4{
+  }
   /* Set gray background color and 100% height */
   h3{
     font-weight: bold;
@@ -19,10 +22,12 @@
   .col-sm-9 {
     margin:auto;
     position: absolute;
-    top: 35%;
     left: 50%;
     -ms-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
+    }
+    .col-sm-4{
+
     }
   #well-info{
     display: flex;
@@ -33,45 +38,26 @@
     margin-right: 5%;
   }
 </style>
+  <div style = "margin-left: 10%; margin-right: 10%;">
+    <div class="well" style="text-align: center;">
+      <h3>Overview Dashboard for Recyclable Bins</h3>
+      <p>Last refreshed: <span id = "datetime"></span></p>
+    </div>
 
-<div class="col-sm-9">
-      <div class="well">
-        <h3>Dashboard</h3>
-        <div id = "well-info">
-        <p id = "total">Total number of bins: <br>4</p>
-        <p>Last refreshed: <br> <span id = "datetime"></span></p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-3">
+    <div class="row">
+    {{#each binlist}}
+        <div class="col-sm-4">
           <div class="well">
-            <h3>Bin 1</h3>
-            <p>Capacity: 67%</p> 
+            <h3>{{dataValues.location_description}}</h3>
+            <p>Level {{dataValues.floor_level}}</p> 
+            <img width="300" height="200" src="{{dataValues.camera_ipaddress}}"></img>
+            <p>Status is {{dataValues.status}}</p> 
           </div>
         </div>
-        <div class="col-sm-3">
-          <div class="well">
-            <h3>Bin 2</h3>
-            <p>Capacity: 40%</p> 
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="well">
-            <h3>Bin 3</h3>
-            <p>Capacity: 21%</p> 
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="well">
-            <h3>Bin 4</h3>
-            <p>Capacity: 89%</p> 
-          </div>
-        </div>
-      </div>
-
-      </div>
-  </div>
-  <script>
+    {{/each}}
+    </div>
+</div>
+<script>
   var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   var date = new Date();
@@ -80,21 +66,21 @@
   var month = months[date.getMonth()];
   var year = date.getFullYear();
   var hr = date.getHours();
-var min = date.getMinutes();
-if (min < 10) {
-    min = "0" + min;
-}
-var ampm = "am";
-if( hr >= 12 ) {
-    if (hr = 12) {
-      ampm = "pm"
-    }
-    else{
-      hr -= 12;
-      ampm = "pm";
-    }
-    
-}
+  var min = date.getMinutes();
+  if (min < 10) {
+      min = "0" + min;
+  }
+  var ampm = "am";
+  if( hr >= 12 ) {
+      if (hr == 12) {
+        ampm = "pm"
+      }
+      else{
+        hr -= 12;
+        ampm = "pm";
+      }
+      
+  }
   var x = document.getElementById("datetime");
   x.innerText = day + ", " + dates + " " + month + " " + year + " " + hr + ":" + min + ampm ;  
 </script>

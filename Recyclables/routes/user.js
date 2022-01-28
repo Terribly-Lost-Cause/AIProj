@@ -6,6 +6,7 @@ const uuid = require('uuidv4');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const Session = require('../models/session');
+const Bin = require('../models/bin');
 var passwordValidator = require('password-validator');
 var schema = new passwordValidator();
 schema
@@ -131,14 +132,12 @@ router.get('/login', (req, res) => {
             layout: 'loginlayout.handlebars'
         })
     } else {
-
         User.findOne({ where: { userID: req.session.userId } }) // Find the user in db based on the email retrieved
             .then(user => {
                 if (user) {
                     let type = user.type
-                    res.render('user/userManagement', {
-                        layout: 'main.handlebars',
-                        type
+                    res.render('user/dashboard', {
+                        layout: 'main.handlebars'
                     })
                 }
             })
@@ -168,7 +167,7 @@ router.post('/login', (req, res) => {
                                 session_id
                             })
                             console.log("user.status", user.status)
-                            res.render('user/userManagement', {
+                            res.render('user/dashboard', {
                                 layout: 'main.handlebars',
                                 type
                             })
@@ -228,8 +227,32 @@ router.post('/Dashboard', (req, res) => {
 });
 
 router.get('/Dashboard', (req, res) => {
-    const title = 'Staff Dashboard';
-    res.render('user/dashboard', { title: title }) // renders views/user/userManagement.handlebars (webpage to key in new user info)
+    const title = 'Overall Dashboard';
+
+    Bin.findAll({}).then(bin => { //find all recyclables bins available
+            const binlist = bin;
+
+            for (var i = 0; i < binlist.length; i++){
+                if (binlist[i].status == 0){
+                    binlist[i].status = "Inactive"
+                }
+                else if (binlist[i].status == 1){
+                    binlist[i].status = "Active"
+                }
+                else if (binlist[i].status == 2){
+                    binlist[i].status = "Alert"
+                }
+                else if (binlist[i].status == 3){
+                    binlist[i].status = "Warning"
+                }
+            }
+
+            res.render('user/dashboard', { //render page
+                "binlist": binlist,
+            })
+        }
+    )
+
 });
 
 router.get('/updatestatus/:id', (req, res) => {
