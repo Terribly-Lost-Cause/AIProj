@@ -7,6 +7,7 @@ const session = db.define('session', {
         type: Sequelize.STRING,
         primaryKey: true
     },
+
     expires: {
         type: Sequelize.STRING
     },

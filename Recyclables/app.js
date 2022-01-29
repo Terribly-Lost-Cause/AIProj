@@ -31,7 +31,7 @@ const app = express();
  * 3. 'defaultLayout' specifies the main.handlebars file under views/layouts as the main template
  *
  * */
-app.engine('handlebars', exphbs.engine({
+app.engine('handlebars', exphbs({
     defaultLayout: 'main' // Specify default template views/layout/main.handlebar 
 }));
 app.set('view engine', 'handlebars');

@@ -8,6 +8,8 @@ const saltRounds = 10;
 const Session = require('../models/session');
 const Bin = require('../models/bin');
 var passwordValidator = require('password-validator');
+
+//const { UUID } = require('sequelize/types');
 var schema = new passwordValidator();
 schema
     .is().min(8) // Minimum length 8
@@ -15,6 +17,10 @@ schema
     .has().lowercase() // Must have lowercase letters
     .has().digits() // Must have digits
     .has().symbols() // Must have special characters
+
+
+
+
 router.get('/addUser', (req, res) => {
     const title = 'Add User';
     res.render('user/addUser', { title: title }) // renders views/user/adduser.handlebars (webpage to key in new user info)
@@ -75,7 +81,9 @@ router.post('/addUser', (req, res) => {
         })
 });
 
-router.get('/userManagement', (req, res) => {
+router.get('/userManagement', async(req, res) => {
+    var checkSession = await require("./../utils/sessionCheck")
+    console.log(checkSession)
     User.findAll({}).then(user => { //find all users
             if (user != undefined) { //pagination
                 const userlist = user;
@@ -124,24 +132,15 @@ router.post('/userManagement', (req, res) => {
 });
 
 
-router.get('/login', (req, res) => {
+router.get('/login', async function(req, res) {
     const title = 'Login';
+    var checkSession = await require("./../utils/sessionCheck")
+    console.log(checkSession)
 
-    if (req.session.userId == undefined) {
-        res.render('user/login', { // renders views/user/login.handlebars
-            layout: 'loginlayout.handlebars'
-        })
-    } else {
-        User.findOne({ where: { userID: req.session.userId } }) // Find the user in db based on the email retrieved
-            .then(user => {
-                if (user) {
-                    let type = user.type
-                    res.render('user/dashboard', {
-                        layout: 'main.handlebars'
-                    })
-                }
-            })
-    }
+    res.render('user/login', { // renders views/user/login.handlebars
+        layout: 'loginlayout.handlebars'
+    })
+
 
 
 });
@@ -151,36 +150,55 @@ router.post('/login', (req, res) => {
     let name = req.body.username; // Retrieve email from the field
     let password = req.body.password; // Retrieve password from the field
     let errors = ["Failure to login, contact Administrator for assistance"]; // Initialise error message to pop if any
+
     User.findOne({ where: { name: name } }) // Find the user in db based on the email retrieved
         .then(user => {
             if (user) { // If exist can proceed
                 if (bcrypt.compareSync(password, user.hash)) { // If matching password can proceed
 
                     let type = user.type
+                    console.log(":::::::::::::::::::::::::::", user)
+
                     if (user.status == 1) { // If status is active then we can log in the user, go to the main dashboard
-                        if (type == "supervisor") {
+                        if (type == "cleaner") {
                             let userId = user.userId;
                             req.session.userId = userId;
-                            session_id = req.session.userId
+                            let session_id = uuid.uuid()
+                            res.cookie('new_cookie', session_id).toString(); // get all cookies
+                            //
+                            //console.log("default_cookie", session_id) // get that specific cookies
+
+                            var current = new Date();
+                            var minutesToAdd = 30;
+                            let expires = new Date(current.getTime() + (minutesToAdd * 60000)).toString()
+                            let data = user.userId
+
 
                             Session.create({
-                                session_id
+                                session_id,
+                                expires,
+                                data
                             })
                             console.log("user.status", user.status)
                             res.render('user/dashboard', {
                                 layout: 'main.handlebars',
                                 type
                             })
-                        } else {
-                            res.render('user/userManagement')
-                        }
-                    } else {
 
-                        res.render('user/login', {
-                            layout: 'loginlayout.handlebars',
-                            errors: errors,
-                            name
-                        })
+                        } else if (type == "supervisor") {
+                            let userId = user.userId;
+                            req.session.userId = userId;
+                            session_id = req.session.userId
+                            Session.create({
+                                session_id
+                            })
+                            console.log("user.status", user.status)
+                            res.render('user/userManagement', {
+                                layout: 'loginlayout.handlebars',
+                                errors: errors,
+                                name
+                            })
+                        }
                     }
                 } else {
                     let updatedFailedCounter = user.failedCounter + 1
@@ -230,28 +248,26 @@ router.get('/Dashboard', (req, res) => {
     const title = 'Overall Dashboard';
 
     Bin.findAll({}).then(bin => { //find all recyclables bins available
-            const binlist = bin;
+        const binlist = bin;
 
-            for (var i = 0; i < binlist.length; i++){
-                if (binlist[i].status == 0){
-                    binlist[i].status = "Inactive"
-                }
-                else if (binlist[i].status == 1){
-                    binlist[i].status = "Active"
-                }
-                else if (binlist[i].status == 2){
-                    binlist[i].status = "Alert"
-                }
-                else if (binlist[i].status == 3){
-                    binlist[i].status = "Warning"
-                }
+        for (var i = 0; i < binlist.length; i++) {
+            if (binlist[i].status == 0) {
+                binlist[i].status = "Inactive"
+
+                binlist[i].camera_ipaddress = "/img/video-error.png"
+            } else if (binlist[i].status == 1) {
+                binlist[i].status = "Active"
+            } else if (binlist[i].status == 2) {
+                binlist[i].status = "Warning"
+            } else if (binlist[i].status == 3) {
+                binlist[i].status = "Alert"
             }
-
-            res.render('user/dashboard', { //render page
-                "binlist": binlist,
-            })
         }
-    )
+
+        res.render('user/dashboard', { //render page
+            "binlist": binlist,
+        })
+    })
 
 });
 
@@ -292,5 +308,26 @@ router.get('/updatestatus/:id', (req, res) => {
         })
 })
 
+
+router.get('/logout', (req, res) => {
+    // Destroy the session based on the userId
+    let logoutCookie = req.cookies.new_cookie // get that specific cookies
+    Session.findOne({ where: { session_id: logoutCookie } })
+        .then(function(session) {
+            session.destroy()
+                //
+
+        })
+        // Alert for successfully logout
+    res.clearCookie("recycling_session");
+    res.clearCookie("new_cookie");
+    res.end()
+    res.send(`
+        <script>alert("You have successfully logged out")
+        setTimeout(window.location = "/user/login", 1000)</script>
+    `, );
+
+    req.session.destroy()
+})
 
 module.exports = router
