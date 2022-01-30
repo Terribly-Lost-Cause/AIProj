@@ -16,8 +16,10 @@
     }
 </style>
 
-<div>
+<div style = "margin-left: 5%; margin-right: 5%; margin-top: 3%; width: 90%;">
+
     {{#if user}}
+    <a href="/user/addUser"><button class="btn btn-primary">Add users</button></a>
     <table>
     <tr>
         <th>Name</th>
@@ -33,13 +35,14 @@
         <td>{{dataValues.type}}</td>
         {{#if dataValues.status}}
         <td>Active</td>
-        <td><a href="/user/updatestatus/{{dataValues.userId}}"><button>Deactivate</button></a></td>
+        <td><a href="/user/updatestatus/{{dataValues.userId}}"><button class="btn btn-danger">Deactivate</button></a></td>
         {{else}}
         <td>Inactive</td>
-        <td><a href="/user/updatestatus/{{dataValues.userId}}"><button>Activate</button></a></td>
+        <td><a href="/user/updatestatus/{{dataValues.userId}}"><button class="btn btn-success">Activate</button></a></td>
         {{/if}}
     </tr>
     {{/each}}
     </table>
+
     {{/if}}
 </div>

@@ -6,7 +6,6 @@ const uuid = require('uuidv4');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const Session = require('../models/session');
-const Bin = require('../models/bin');
 var passwordValidator = require('password-validator');
 
 //const { UUID } = require('sequelize/types');
@@ -18,12 +17,111 @@ schema
     .has().digits() // Must have digits
     .has().symbols() // Must have special characters
 
+// User login get and post
+router.get('/login', async function(req, res) {
+    const title = 'Login';
+    var checkValidator = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+
+    if (checkValidator == "false"){
+        res.render('user/login', { // renders views/user/login.handlebars
+            layout: 'loginlayout.handlebars'
+        })
+    }
+    else{
+        res.redirect('/dashboard/main')
+    }
+});
+
+router.post('/login', (req, res) => {
+    let name = req.body.username; // Retrieve email from the field
+    let password = req.body.password; // Retrieve password from the field
+    let errors = ["Failure to login, contact Administrator for assistance"]; // Initialise error message to pop if any
+
+    User.findOne({ where: { name: name } }) // Find the user in db based on the email retrieved
+        .then(user => {
+            if (user) { // If exist can proceed
+                if (bcrypt.compareSync(password, user.hash)) { // If matching password can proceed
+                    if (user.status == 1) { // If status is active then we can log in the user, go to the main dashboard
+
+                        let userId = user.userId;
+                        req.session.userId = userId;
+                        let session_id = uuid.uuid()
+                        res.cookie('new_cookie', session_id).toString()
+
+                        var current = new Date();
+                        var minutesToAdd = 30;
+                        let expires = new Date(current.getTime() + (minutesToAdd * 60000)).toString()
+                        let data = user.userId
+
+                        Session.create({
+                            session_id,
+                            expires,
+                            data
+                        })
+
+                        User.update({
+                            failedCounter: 0
+                        }, {
+                            where: { name: name }
+                        })
+
+                        res.redirect('/dashboard/main')
+                    }
+                } else {
+                    let updatedFailedCounter = user.failedCounter + 1
+                    console.log(updatedFailedCounter)
+                    let updatedStatus = 1
+                    if (updatedFailedCounter >= 3) {
+                        updatedStatus = 0
+                    }
+
+                    updatedStatus
+                    User.update({
+                        failedCounter: updatedFailedCounter,
+                        status: updatedStatus
+                    }, {
+                        where: { name: name }
+                    })
+                    res.render('user/login', {
+                        layout: 'loginlayout.handlebars',
+                        errors: errors,
+                        name
+                    })
+                }
+            } else {
+                res.render('user/login', {
+                    layout: 'loginlayout.handlebars',
+                    errors: errors,
+                    name
+                })
+            }
+        })
+});
 
 
-
-router.get('/addUser', (req, res) => {
+// Add user get and post
+router.get('/addUser', async function(req, res) {
     const title = 'Add User';
-    res.render('user/addUser', { title: title }) // renders views/user/adduser.handlebars (webpage to key in new user info)
+
+    var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+    
+    if (checkValidatorSession == "false"){
+        res.redirect('/user/login')
+    }
+    else if (checkValidatorSession == "true"){
+
+        var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+        if (checkValidatorUser == "cleaner"){
+            res.redirect('/dashboard/main')
+        }
+        else if (checkValidatorUser == "supervisor"){
+            res.render('user/addUser', { 
+                type: "supervisor",
+                title: title 
+            }) // renders views/user/adduser.handlebars (webpage to key in new user info)
+        }
+    }
 });
 
 
@@ -60,7 +158,7 @@ router.post('/addUser', (req, res) => {
                 res.render('user/addUser', {
                     layout: 'main.handlebars',
                     regError: regError,
-
+                    type: "supervisor"
                 });
             } else {
                 // To insert a record into the User table
@@ -81,253 +179,148 @@ router.post('/addUser', (req, res) => {
         })
 });
 
-router.get('/userManagement', async(req, res) => {
-    var checkSession = await require("./../utils/sessionCheck")
-    console.log(checkSession)
-    User.findAll({}).then(user => { //find all users
-            if (user != undefined) { //pagination
-                const userlist = user;
-                console.log(userlist)
-                res.render('user/userManagement', { //render page
-                    //layout: 'staffpage.handlebars',
+// User management get
+router.get('/userManagement', async function(req, res) {
 
-                    //"invoice": invoicelist,
-                    "user": userlist,
-                })
-            }
-        }) // renders views/user/userManagement.handlebars (webpage to key in new user info)
-});
+    var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+    
+    if (checkValidatorSession == "false"){
+        res.redirect('/user/login')
+    }
+    else if (checkValidatorSession == "true"){
 
-router.post('/userManagement', (req, res) => {
-    let userId = uuid.uuid();
-    let name = req.body.name;
-    let type = req.body.type;
-    let plainPassword = req.body.password;
-    let salt = bcrypt.genSaltSync(saltRounds);
-    let hash = bcrypt.hashSync(plainPassword, salt);
-    let mobileNum = req.body.mobileNum;
-    let status = 1;
-    let failedCounter = 0
-    const userInfo = User.findAll({ where: { "userId": userId } })
+        var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
 
-    User.findAll({}).then(user => { //find all invoices
-            if (user != undefined) { //pagination
-                const userId = req.params.id; //get num of pages
-                const userlist = [];
-                console.log("user")
-
-                res.render('user/userManagement', { //render page
-                    //layout: 'staffpage.handlebars',
-
-                    //"invoice": invoicelist,
-                    "user": userlist,
-                    userId
-
-                })
-            }
+        if (checkValidatorUser == "cleaner"){
+            res.redirect('/dashboard/main')
         }
-
-        //res.render('user/userManagement') // renders views/user/userManagement.handlebars (webpage to key in new user info)
-    )
-});
-
-
-router.get('/login', async function(req, res) {
-    const title = 'Login';
-    var checkSession = await require("./../utils/sessionCheck")
-    console.log(checkSession)
-
-    res.render('user/login', { // renders views/user/login.handlebars
-        layout: 'loginlayout.handlebars'
-    })
-
-
-
-});
-
-
-router.post('/login', (req, res) => {
-    let name = req.body.username; // Retrieve email from the field
-    let password = req.body.password; // Retrieve password from the field
-    let errors = ["Failure to login, contact Administrator for assistance"]; // Initialise error message to pop if any
-
-    User.findOne({ where: { name: name } }) // Find the user in db based on the email retrieved
-        .then(user => {
-            if (user) { // If exist can proceed
-                if (bcrypt.compareSync(password, user.hash)) { // If matching password can proceed
-
-                    let type = user.type
-                    console.log(":::::::::::::::::::::::::::", user)
-
-                    if (user.status == 1) { // If status is active then we can log in the user, go to the main dashboard
-                        if (type == "cleaner") {
-                            let userId = user.userId;
-                            req.session.userId = userId;
-                            let session_id = uuid.uuid()
-                            res.cookie('new_cookie', session_id).toString(); // get all cookies
-                            //
-                            //console.log("default_cookie", session_id) // get that specific cookies
-
-                            var current = new Date();
-                            var minutesToAdd = 30;
-                            let expires = new Date(current.getTime() + (minutesToAdd * 60000)).toString()
-                            let data = user.userId
-
-
-                            Session.create({
-                                session_id,
-                                expires,
-                                data
-                            })
-                            console.log("user.status", user.status)
-                            res.render('user/dashboard', {
-                                layout: 'main.handlebars',
-                                type
-                            })
-
-                        } else if (type == "supervisor") {
-                            let userId = user.userId;
-                            req.session.userId = userId;
-                            session_id = req.session.userId
-                            Session.create({
-                                session_id
-                            })
-                            console.log("user.status", user.status)
-                            res.render('user/userManagement', {
-                                layout: 'loginlayout.handlebars',
-                                errors: errors,
-                                name
-                            })
-                        }
-                    }
-                } else {
-                    let updatedFailedCounter = user.failedCounter + 1
-                    console.log(updatedFailedCounter)
-                    let updatedStatus = 1
-                    if (updatedFailedCounter >= 3) {
-                        updatedStatus = 0
-                    }
-
-                    updatedStatus
-                    User.update({
-                        failedCounter: updatedFailedCounter,
-                        status: updatedStatus
-                    }, {
-                        where: { name: name }
-                    })
-                    res.render('user/login', {
-                        layout: 'loginlayout.handlebars',
-                        errors: errors,
-                        name
+        else if (checkValidatorUser == "supervisor"){
+            User.findAll({}).then(user => { //find all users
+                if (user != undefined) { //pagination
+                    const userlist = user;
+                    res.render('user/userManagement', { //render page
+                        "user": userlist,
+                        type: "supervisor"
                     })
                 }
-            } else {
-                res.render('user/login', {
-                    layout: 'loginlayout.handlebars',
-                    errors: errors,
-                    name
-                })
-            }
-        })
-});
-
-router.post('/Dashboard', (req, res) => {
-    const title = 'Staff Dashboard';
-    let usrId = req.params.userId
-    User.findOne({ where: { userId: usrId } })
-        .then(user => {
-            res.render('user/dashboard', {
-                layout: 'main.handlebars',
-                type
-            })
-        })
-    res.render('user/dashboard', { title: title }) // renders views/user/userManagement.handlebars (webpage to key in new user info)
-});
-
-router.get('/Dashboard', (req, res) => {
-    const title = 'Overall Dashboard';
-
-    Bin.findAll({}).then(bin => { //find all recyclables bins available
-        const binlist = bin;
-
-        for (var i = 0; i < binlist.length; i++) {
-            if (binlist[i].status == 0) {
-                binlist[i].status = "Inactive"
-
-                binlist[i].camera_ipaddress = "/img/video-error.png"
-            } else if (binlist[i].status == 1) {
-                binlist[i].status = "Active"
-            } else if (binlist[i].status == 2) {
-                binlist[i].status = "Warning"
-            } else if (binlist[i].status == 3) {
-                binlist[i].status = "Alert"
-            }
+            }) // renders views/user/userManagement.handlebars (webpage to key in new user info)
         }
-
-        res.render('user/dashboard', { //render page
-            "binlist": binlist,
-        })
-    })
-
+    }
 });
 
-router.get('/updatestatus/:id', (req, res) => {
-    User.findOne({ where: { userId: req.params.id } })
-        .then(user => {
-            var stat = user.status; // Initialise the user status from db
-            if (stat == 1) {
-                var newstat = 0; // If button click make status deactive
-            } else {
-                var newstat = 1; // If button click make status active
-            }
-            var stt = user.action; // Initialise the button value from the db
-            if (stat == 0) {
-                var stat = 1 // If button click make status active, opposite from status
-            } else {
-                var stat = 0 // If button click make status deactive, opposite from status
-            }
-            try {
-                User.update({
-                        status: newstat, // Update new status and the button value
-                        //action: stt
-                    }, {
-                        where: {
-                            userID: req.params.id // FInd the user who is being changed
+// get update status
+router.get('/updatestatus/:id', async function(req, res) {
+
+    var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+    
+    if (checkValidatorSession == "false"){
+        res.redirect('/user/login')
+    }
+    else if (checkValidatorSession == "true"){
+
+        var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+        if (checkValidatorUser == "cleaner"){
+            res.redirect('/dashboard/main')
+        }
+        else if (checkValidatorUser == "supervisor"){
+                User.findOne({ where: { userId: req.params.id } })
+                .then(user => {
+                    if (user){
+                        var stat = user.status; // Initialise the user status from db
+                        if (stat == 1) {
+                            var newstat = 0; // If button click make status deactive
+                        } else {
+                            var newstat = 1; // If button click make status active
                         }
-                    })
-                    .then(() => { // alert success update
+                        var stt = user.action; // Initialise the button value from the db
+                        if (stat == 0) {
+                            var stat = 1 // If button click make status active, opposite from status
+                        } else {
+                            var stat = 0 // If button click make status deactive, opposite from status
+                        }
+            
+                        User.update({
+                            status: newstat, // Update new status and the button value
+                            //action: stt
+                        }, {
+                            where: {
+                                userID: req.params.id // FInd the user who is being changed
+                            }
+                        })
+                        .then(() => { // alert success update
+                            res.send(`
+                                <script>alert("Changes made successfully saved")
+                                setTimeout(window.location = "/user/userManagement", 1000)</script>
+                            `);
+                        })
+                    }
+                    else{
                         res.send(`
-                    <script>alert("Changes made successfully saved")
-                    setTimeout(window.location = "/user/userManagement", 1000)</script>
-                `);
-                    })
-            } catch (error) {
-                console.log(error);
-                res.status(500).end();
-            }
-        })
+                                <script>alert("UserId not found")
+                                setTimeout(window.location = "/user/userManagement", 1000)</script>
+                            `);
+                    }
+                    
+                })
+        }
+    }
 })
 
-
-router.get('/logout', (req, res) => {
+// logout
+router.get('/logout', async function(req, res) {
     // Destroy the session based on the userId
+    
     let logoutCookie = req.cookies.new_cookie // get that specific cookies
-    Session.findOne({ where: { session_id: logoutCookie } })
-        .then(function(session) {
-            session.destroy()
-                //
-
-        })
-        // Alert for successfully logout
-    res.clearCookie("recycling_session");
-    res.clearCookie("new_cookie");
-    res.end()
+    await Session.findOne({ where: { session_id: logoutCookie } })
+    .then(function(session) {
+        session.destroy()
+        res.clearCookie("recycling_session");
+        res.clearCookie("new_cookie");
+        req.session.destroy()
+    })
     res.send(`
         <script>alert("You have successfully logged out")
         setTimeout(window.location = "/user/login", 1000)</script>
-    `, );
-
-    req.session.destroy()
+    `);
+    
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//type: "supervisor"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 module.exports = router

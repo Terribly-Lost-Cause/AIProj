@@ -5,9 +5,138 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
   
   <style>
+    
+h3, h6 {
+	margin: 0;
+	line-height: 1em;
+}
+h3 {
+	margin-bottom: 1em;
+}
+h6 {
+	font-size: .8em;
+	padding: 0 0 .5em;
+    color: #919191;
+}
+figure {
+	margin: 0 auto;
+	max-width: 1100px;
+	position: relative;
+}
+.graphic {
+	padding-left: 30px;
+}
+@keyframes expand {
+	from {width: 0%;}
+	to {width: 100%;}
+}
+@media screen and (min-width: 768px) {
+	@keyframes expand {
+		from {width: 0%;}
+		to {width: calc(100% - 75px);}
+	}
+}
+.chart {
+	overflow: hidden;
+	width: 0%;
+	animation: expand 1.5s ease forwards;
+}
+.row + .row .chart {
+	animation-delay: .2s;
+}
+.row + .row + .row .chart {
+	animation-delay: .4s;
+}
+.block {
+	display: block;
+	height: 40%;
+	color: #fff;
+	font-size: .75em;
+	float: left;
+	background-color: #334D5C;
+	position: relative;
+	overflow: hidden;
+	opacity: 1;
+	transition: opacity, .3s ease;
+	cursor: pointer;
+  margin-top: 10%;
+}
+.block:nth-of-type(2),
+.legend li:nth-of-type(2):before {
+	background-color: #45B29D;
+}
+.block:nth-of-type(3),
+.legend li:nth-of-type(3):before {
+	background-color: #EFC94C;
+}
+.block:nth-of-type(4),
+.legend li:nth-of-type(4):before {
+	background-color: #E27A3F;
+}
+.block:nth-of-type(5),
+.legend li:nth-of-type(5):before {
+	background-color: #DF5A49;
+}
+.block:nth-of-type(6),
+.legend li:nth-of-type(6):before {
+	background-color: #962D3E;
+}
+.block:hover {
+	opacity: .65;
+}
+.value {
+	display: block;
+	line-height: 1em;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%);
+}
+.x-axis {
+    text-align: center;
+	padding: .5em 0 2em;
+}
+.y-axis {
+	height: 20px;
+    transform: translate(-32px,170px) rotate(270deg);
+    position: absolute;
+    left: 0;
+}
+.legend {
+    margin: 0 auto;
+    padding: 0;
+	font-size: .9em;
+}
+.legend li {
+    display: inline-block;
+    padding: .25em 1em;
+    line-height: 1em;
+}
+.legend li:before {
+    content: "";
+    margin-right: .5em;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+	background-color: #334D5C;
+}
+@media screen and (min-width: 768px) {
+	h6 {
+		padding: 0;
+		width: 75px;
+		float: left;
+		line-height: 70px;
+	}
+	.block {
+		font-size: 1em;
+	}
+	.legend {
+		width: 50%;
+	}
+}
   /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
   .row.content {
-    height: 550px; 
+    height: 100%; 
   }
   .col-sm-4{
   }
@@ -38,7 +167,7 @@
     margin-right: 5%;
   }
 </style>
-  <div style = "margin-left: 10%; margin-right: 10%;">
+  <div style = "margin-left: 10%; margin-right: 10%; margin-top: 3%;">
     <div class="well" style="text-align: center;">
       <h3>Overview Dashboard for Recyclable Bins</h3>
       <p>Last refreshed: <span id = "datetime"></span></p>
@@ -47,16 +176,92 @@
     <div class="row">
     {{#each binlist}}
         <div class="col-sm-4">
-          <div class="well">
+          <div class="well" id="main">
             <h3>{{dataValues.location_description}}</h3>
             <p><span style="width: 80%; float:left;">Level {{dataValues.floor_level}}</span><span style="width: 20%; float: right;">{{dataValues.status}}</span></p>
             <img width="100%" height="100%" src="{{dataValues.camera_ipaddress}}"></img>
+            <br>
+            <br>
+            <h3 id="{{dataValues.bin_id}}_plastic"style="margin: 0%">Plastic</h3>
+            <div id="{{dataValues.bin_id}}_{{dataValues.current_plastic}}_{{dataValues.threshold}}" style='background-color:Red; width:100%'>
+              <p style="color: Red; text-align: center; opacity: 0">100%</p>
+            </div>
+            <br>
+            <br>
+            <h3 id="{{dataValues.bin_id}}_metal" style="margin: 0%">Metal</h3>
+            <div id="{{dataValues.bin_id}}_{{dataValues.current_metal}}_{{dataValues.threshold}}" style='background-color:Green; width:100%'>
+              <p style="color: Green; text-align: center; opacity: 0">100% </p>
+            </div>
           </div>
         </div>
     {{/each}}
     </div>
 </div>
 <script>
+
+  var allmain = document.querySelectorAll("[id='main']");
+  for (var i = 0, len = allmain.length ; i < len; i++) {
+      const plastic_child = allmain[i].children[6].id;
+      const plastic_p_child = allmain[i].children[5].id;
+      const plastic_array = plastic_child.split("_");
+      const plastic_p_array = plastic_p_child.split("_");
+
+      var plastic_value = Math.round(plastic_array[1] / plastic_array[2] * 100)
+      if (plastic_value > 100){
+        plastic_value = 100
+      }
+
+      var plastic_level = null;
+      if (plastic_value < 50){
+        plastic_level = "Green"
+      }
+      else if (plastic_value >= 50 && plastic_value < 75){
+        plastic_level = "Tomato"
+      }
+      else if (plastic_value >= 75){
+        plastic_level = "Red"
+      }
+
+      document.getElementById(plastic_child).style.width = plastic_value + "%"
+      document.getElementById(plastic_child).style.backgroundColor = plastic_level
+      document.getElementById(plastic_p_child).innerHTML = "Plastic " + plastic_value + "%"
+
+
+
+      const metal_child = allmain[i].children[10].id;
+      const metal_p_child = allmain[i].children[9].id;
+
+      const metal_array = metal_child.split("_");
+      const metal_p_array = metal_p_child.split("_");
+
+      var metal_value = Math.round(metal_array[1] / metal_array[2] * 100)
+      if (metal_value > 100){
+        metal_value = 100
+      }
+
+      var metal_level = null;
+      if (metal_value < 50){
+        metal_level = "Green"
+      }
+      else if (metal_value >= 50 && metal_value < 75){
+        metal_level = "Orange"
+      }
+      else if (metal_value >= 75){
+        metal_level = "Red"
+      }
+      document.getElementById(metal_child).style.width = metal_value + "%"
+      document.getElementById(metal_child).style.backgroundColor = metal_level
+      document.getElementById(metal_p_child).innerHTML = "Metal " + metal_value + "%"
+  }
+
+
+
+
+
+
+
+
+
   var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   var date = new Date();
@@ -81,5 +286,5 @@
       
   }
   var x = document.getElementById("datetime");
-  x.innerText = day + ", " + dates + " " + month + " " + year + " " + hr + ":" + min + ampm ;  
+  x.innerText = day + ", " + dates + " " + month + " " + year + " " + hr + ":" + min + ampm ;
 </script>
