@@ -6,12 +6,15 @@ from requests.models import ReadTimeoutError
 import time
 import cv2
 import numpy as np
-from PIL import Image 
+#from PIL import Image 
 import sys
+import mysql.connector
+from sqlalchemy import over
+
 
 TIMER = int(1)
 cap = cv2.VideoCapture(0)
-address = "https://172.27.188.254:8080//video"
+address = "https://192.168.1.95:8080//video"
 cap.open(address)
 frame_width = int( cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height =int( cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
@@ -23,7 +26,16 @@ secoonds = 10000000
 trial = 0
 ret, frame1 = cap.read()
 ret, frame2 = cap.read()
+bin_id = "e67dac91-60c2-4bf5-90de-2e6c61be8c5a"
 #print(frame1.shape)
+
+#Initialise mysql db
+mydb = mysql.connector.connect(
+  host="localhost",
+  user="root",
+  password="Lost&C0nfused",
+  database="recyclables"
+)
 
 # Create the functions below
 def find_comport(pid, vid, baud):
@@ -46,7 +58,7 @@ def find_comport(pid, vid, baud):
     return None
 
 
-def main(file):   
+def main(file, bin_id):   
     print("start")
     ser_micro.open()
     servodelimiter = " "
@@ -58,11 +70,44 @@ def main(file):
 
         response  = requests.post(url, files=files, timeout=1)
             
-        print(response.status_code)
         if (response.status_code == 200):
             prediction = response.json()
             print("file: ", file, "prediction: ",prediction)
             material = prediction["result"][0]["name"]
+            
+            retrievecursor = mydb.cursor()
+            retrievesql = "SELECT * FROM bins WHERE bin_id = %s"
+            retrieveval = (bin_id)
+            retrievecursor.execute(retrievesql, (retrieveval,))
+            myresult = retrievecursor.fetchall()
+
+            current_plastic = 0
+            current_metal = 0
+            overall_plastic = 0
+            overall_metal = 0
+            for x in myresult:
+                current_plastic = x[7]
+                current_metal = x[8]
+                overall_plastic = x[5]
+                overall_metal = x[6]
+            if (material == "plastic"):
+                current_plastic = current_plastic + 1
+                overall_plastic = overall_plastic+1
+                updatecursor = mydb.cursor()
+                updatesql = "UPDATE bins SET current_plastic = %s, overall_plastic = %s WHERE bin_id = %s"
+                updateval = (current_plastic, overall_plastic , bin_id)
+                updatecursor.execute(updatesql, updateval)
+                mydb.commit()
+            elif (material == "metal"):
+                current_metal = current_metal + 1
+                overall_metal = overall_metal+1
+                updatecursor = mydb.cursor()
+                updatesql = "UPDATE bins SET current_metal = %s, overall_metal = %s WHERE bin_id = %s"
+                updateval = (current_metal, overall_metal ,bin_id)
+                updatecursor.execute(updatesql, updateval)
+                mydb.commit()
+            
+            
             ser_micro.write(servodelimiter.encode('utf-8') + material.encode('utf-8'))
             ser_micro.close()
             return "success"
@@ -123,11 +168,11 @@ while cap.isOpened():
             trial+=1
             image = cv2.resize(frame1, (1280,720))
             filename, img = takeSS(cap, TIMER, trial)
-            status = main(filename)
+            status = main(filename,bin_id)
             frame1 = img
             frame2 = img
             if status == "error":
-                status = main(filename)
+                status = main(filename,bin_id)
             else:
                 break
         pass

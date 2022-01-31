@@ -31,18 +31,17 @@ router.get('/main', async function(req, res) {
 
                 let plastic_level = curPlastic / threshold * 100
                 let metal_level = curMetal / threshold * 100
-                
+
                 if (status != 0) {
 
                     let level_update = null;
-                    if (plastic_level > metal_level){
+                    if (plastic_level > metal_level) {
                         level_update = plastic_level
-                    }
-                    else{
+                    } else {
                         level_update = metal_level
                     }
 
-                    
+
                     if (level_update < 50) {
                         updatedstatus = 1
                     } else if ((level_update >= 50 && level_update < 75)) {
@@ -73,7 +72,7 @@ router.get('/main', async function(req, res) {
                 } else if (binlist[i].status == 1) {
                     binlist[i].status = "Active"
                 } else if (binlist[i].status == 2) {
-                    binlist[i].status = "Warning"
+                    binlist[i].status = "Danger"
                 } else if (binlist[i].status == 3) {
                     binlist[i].status = "Alert"
                 }
@@ -82,11 +81,11 @@ router.get('/main', async function(req, res) {
 
 
             if (checkValidatorUser == "cleaner") {
-                res.render('user/dashboard', { //render page
+                res.render('dashboard/dashboard', { //render page
                     binlist: binlist
                 })
             } else if (checkValidatorUser == "supervisor") {
-                res.render('user/dashboard', { //render page
+                res.render('dashboard/dashboard', { //render page
                     binlist: binlist,
                     type: "supervisor"
                 })
