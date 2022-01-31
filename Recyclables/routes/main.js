@@ -12,7 +12,11 @@ router.use('/bin', binRoute)
 // Logout User
 router.get('/logout', (req, res) => {
     req.logout();
-    res.redirect('/');
+    res.redirect("/user/login")
 });
+
+router.get("/", (req, res)=>{
+    res.redirect("/user/login")
+})
 
 module.exports = router;
