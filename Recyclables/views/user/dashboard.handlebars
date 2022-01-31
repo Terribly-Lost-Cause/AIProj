@@ -183,13 +183,13 @@ figure {
             <br>
             <br>
             <h3 id="{{dataValues.bin_id}}_plastic"style="margin: 0%">Plastic</h3>
-            <div id="{{dataValues.bin_id}}_{{dataValues.current_plastic}}_{{dataValues.threshold}}" style='background-color:Red; width:100%'>
+            <div id="{{dataValues.bin_id}}_{{dataValues.current_plastic}}_{{dataValues.threshold}}_plastic" style='background-color:Red; width:100%'>
               <p style="color: Red; text-align: center; opacity: 0">100%</p>
             </div>
             <br>
             <br>
             <h3 id="{{dataValues.bin_id}}_metal" style="margin: 0%">Metal</h3>
-            <div id="{{dataValues.bin_id}}_{{dataValues.current_metal}}_{{dataValues.threshold}}" style='background-color:Green; width:100%'>
+            <div id="{{dataValues.bin_id}}_{{dataValues.current_metal}}_{{dataValues.threshold}}_metal" style='background-color:Green; width:100%'>
               <p style="color: Green; text-align: center; opacity: 0">100% </p>
             </div>
           </div>
@@ -209,6 +209,9 @@ figure {
       var plastic_value = Math.round(plastic_array[1] / plastic_array[2] * 100)
       if (plastic_value > 100){
         plastic_value = 100
+      }
+      else if (plastic_value == 0){
+        plastic_value = 1
       }
 
       var plastic_level = null;
@@ -237,6 +240,9 @@ figure {
       var metal_value = Math.round(metal_array[1] / metal_array[2] * 100)
       if (metal_value > 100){
         metal_value = 100
+      }
+      else if (metal_value == 0){
+        metal_value = 1
       }
 
       var metal_level = null;

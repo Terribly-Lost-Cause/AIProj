@@ -31,12 +31,23 @@ router.get('/main', async function(req, res) {
 
                 let plastic_level = curPlastic / threshold * 100
                 let metal_level = curMetal / threshold * 100
+                
                 if (status != 0) {
-                    if (plastic_level < 50 && metal_level < 50) {
+
+                    let level_update = null;
+                    if (plastic_level > metal_level){
+                        level_update = plastic_level
+                    }
+                    else{
+                        level_update = metal_level
+                    }
+
+                    
+                    if (level_update < 50) {
                         updatedstatus = 1
-                    } else if ((plastic_level >= 50 && plastic_level < 75) || (metal_level >= 50 && metal_level < 75)) {
+                    } else if ((level_update >= 50 && level_update < 75)) {
                         updatedstatus = 2
-                    } else if ((plastic_level >= 75) || (metal_level >= 75)) {
+                    } else if ((level_update >= 75)) {
                         updatedstatus = 3
                     }
                     Bin.update({
@@ -51,8 +62,9 @@ router.get('/main', async function(req, res) {
 
             }
         })
-        Bin.findAll({}).then(bin => { //find all recyclables bins available
-            const binlist = bin;
+
+        Bin.findAll({}).then(newbin => { //find all recyclables bins available
+            const binlist = newbin;
 
             for (var i = 0; i < binlist.length; i++) {
                 if (binlist[i].status == 0) {
@@ -79,7 +91,6 @@ router.get('/main', async function(req, res) {
                     type: "supervisor"
                 })
             }
-
         })
     }
 });
