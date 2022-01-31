@@ -166,6 +166,12 @@ figure {
   #total{
     margin-right: 5%;
   }
+
+  
+  .well:hover{
+    cursor: pointer;
+    background-color: #e0e0e0;
+  }
 </style>
   <div style = "margin-left: 3.5%; margin-right: 3.5%; margin-top: 3%;">
     <div class="well" style="text-align: center;">
@@ -296,4 +302,21 @@ figure {
   }
   var x = document.getElementById("datetime");
   x.innerText = day + ", " + dates + " " + month + " " + year + " " + hr + ":" + min + ampm ;
+
+
+
+  //Hello zuhe!
+  $(".well").on("click", (e)=>{
+
+    let tgt = e.target;
+    let x=0
+
+    while(tgt.tagName != "DIV" || !$(tgt).hasClass("well")){
+      tgt = tgt.parentElement;
+      x++
+      if(x>5)break;
+    }
+
+    window.location.href = `/dashboard/location?loc=${$(tgt).data("id")}`
+  })
 </script>

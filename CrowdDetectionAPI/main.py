@@ -69,7 +69,7 @@ def hello():
         result = {key:value.numpy() for key,value in results.items()}
 
         #Perform NMS because the model is funny
-        nmsIndexes = tf.image.non_max_suppression(result["detection_boxes"][0], result["detection_scores"][0], 300, iou_threshold=0.2, score_threshold=0.2)
+        nmsIndexes = tf.image.non_max_suppression(result["detection_boxes"][0], result["detection_scores"][0], 300, iou_threshold=0.5, score_threshold=0.2)
 
         #Create an array that "inverses" the results from nmsIndexes
         #This new array will contain the indexes that should be removed from the result before being returned to client

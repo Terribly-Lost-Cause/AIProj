@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<meta charset="UTF-8" />
+<style>
+    body{
+        overflow: hidden;
+    }
+    #title{
+        height: 6vh;
+        min-height: 6vh;
+        text-align: center;
+    }
+    #divMain{
+        display: flex;
+        overflow: hide;
+        border-top: solid black;
+    }
+    .cdivMain{
+        display: inline-block;
+        height: 90vh;
+        min-height: 90vh;
+        max-height: 90vh; 
+        padding: 20px;
+    }
+    #videoCamera{
+        height: 50%;
+        margin: auto;
+        display: block;
+    }
+    #divViewsSelector{
+        width: 20vw;
+    }
+
+    #divStats{
+        width: 20vw;
+    }
+    #divCamera{
+        width: 60vw;
+        border-left: solid black;
+        border-right: solid black;
+        background-color: #f9f9f9;
+    }
+    .img{
+        height: 25%;
+        display: inline-block;
+        text-align: center;
+        margin: auto;
+    }
+    #progressNextScreenshotBody{
+        width: 80%;
+        margin: 1% auto;
+        height: 5%;
+        border: solid black;
+        border-radius: 20px;
+    }
+    #progressNextScreenshot{
+        color: black;
+        font-size: large;
+    }
+    #divStats span{
+        display: block;
+        margin: 5% auto;
+        font-size: large;
+    }
+    #divControls{
+        margin-bottom: 20px;
+        width: 100%;
+    }
+    #divControls button{
+        width: 100%;
+        border: solid blue; 
+    }
+    #divControls button:hover{
+        width: 100%;
+        background-color: #e5e5e5;
+    }
+    #divViewList{
+        overflow-y: scroll;
+        height: 85%;
+        max-height: 85%;
+    }
+    .divViewSelectItem{
+        background-color: lightgray;
+        display: block;
+        border: solid black 1px;
+        margin: 3% 0;
+        border-radius: 5px;
+        padding: 3%; 
+    }
+    .divViewSelectItem:hover{
+        background-color: lightsteelblue;
+        cursor: pointer;
+    }
+    .divViewSelectItemActive{
+        background-color: lightgreen;
+        display: block;
+        border: solid black 1px;
+        margin: 3% 0;
+        border-radius: 5px;
+        padding: 3%; 
+    }
+    .divViewSelectItemActive:hover{
+        cursor: pointer;
+    }
+    .spanViewItemName{
+        font-weight: bold;
+        font-size: larger;
+        display: list-item;
+    }
+    .spanViewItemSource{
+        font-style: italic;
+        font-size: larger;
+        display: list-item;
+    }
+
+</style>
+
+
+<title>Trashbot Dashboard</title>
+
+<h1 id="title">Trashbot Camera View</h1>
+<div id="divMain">
+    <div class="cdivMain" id="divViewsSelector">
+        <h2>View Selector</h2>
+        <div id="divViewList">
+
+        </div>
+
+    </div>
+    <div class="cdivMain" id="divCamera">
+        
+        <h2>Video Footage</h2>
+        <video autoplay loop id="videoCamera" > </video>
+        <div class="progress" id="progressNextScreenshotBody">
+            <div class="progress-bar" id="progressNextScreenshot" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        <div id="divImgs" class="row">
+            <img id="img2" class="img col-4"></img>
+        </div>
+    </div>
+    <div class="cdivMain" id="divStats">
+        <h2>Statistics</h2>
+        <span id="spanDetectCount"></span>
+        <span id="spanDetectSensitivity"></span>
+        <span id="spanAverage"></span>
+        <div id="divData"></div>
+        <canvas id="chartPeopleCount" width="800" height="450"></canvas>
+        <canvas id="chartAveragePercentage" width="800" height="450"></canvas>
+
+        <div id="divControls">
+            <button id="btnTakeSS" class="btn">Process current screenshot</button>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!--script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script-->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+
+<script>
+
+var maxScreenshotMs = 3000;
+var state = 0;
+var detectionSensitivity = 20;
+setInterval(increaseProgress, 100)
+var video = document.querySelector("#videoCamera");
+$("#progressNextScreenshot").attr("aria-valuemax", maxScreenshotMs)
+$("#progressNextScreenshot").attr("aria-valuenow", 0)
+$("#spanDetectSensitivity").text("Detection sensitivity: " + detectionSensitivity + "%")
+
+
+let viewList = {{{binlist}}}
+let s = new URLSearchParams(window.location.search);
+if(s.has("loc")){
+    let stop = false;
+    for(let i in viewList){
+        console.log(viewList[i].bin_id + "---" + s.get("loc"))
+        if(viewList[i].bin_id == s.get("loc")){
+            switchView(i);
+            stop = true;
+            console.log(i)
+            break;
+        }
+    }
+    if(stop==false)switchView(0)
+}else switchView(0);
+console.log(viewList)
+function loadViewList(activeView){
+
+    $("#divViewList").html("");
+    for(let view in viewList){
+        $("#divViewList").append(`
+            <div class="${activeView == view?"divViewSelectItemActive":"divViewSelectItem"}" data-viewid="${view}">
+                <span class="spanViewItemName">Level ${viewList[view].floor_level} - ${viewList[view].location_description}</span>
+                <span class="spanViewItemSource">${viewList[view].camera_ipaddress}</span>
+            </div>
+        `);
+
+    }
+    
+    $(".divViewSelectItem, .divViewSelectItem span").click((e)=>{
+        if(e.target.tagName.toLowerCase() == "span") return e.target.parentElement.click(); 
+        let tgt = $(e.target)
+        switchView(tgt.attr("data-viewid"));
+    })
+
+
+}
+function increaseProgress(){
+    $("#progressNextScreenshot").attr("aria-valuenow",  parseInt($("#progressNextScreenshot").attr("aria-valuenow"))+100)
+    $("#progressNextScreenshot").css("width",  (parseInt($("#progressNextScreenshot").attr("aria-valuenow"))/maxScreenshotMs*100)+"%")
+    if(parseInt($("#progressNextScreenshot").attr("aria-valuenow")) > maxScreenshotMs){
+        $("#progressNextScreenshot").attr("aria-valuenow", 0)
+        takepicture()
+    }
+    switch(state){
+        case 0:
+            $("#progressNextScreenshot").removeClass("bg-info")
+            $("#progressNextScreenshot").removeClass("bg-success")
+            $("#progressNextScreenshot").addClass("bg-warning")
+            $("#progressNextScreenshot").text("New image in " + parseInt((maxScreenshotMs - $("#progressNextScreenshot").attr("aria-valuenow"))/1000) + "s" )
+
+            break;
+        case 1:
+            $("#progressNextScreenshot").removeClass("bg-warning")
+            $("#progressNextScreenshot").removeClass("bg-success")
+            $("#progressNextScreenshot").addClass("bg-info")
+            $("#progressNextScreenshot").text("Processing image...")
+            break;
+        case 2:
+            $("#progressNextScreenshot").removeClass("bg-info")
+            $("#progressNextScreenshot").removeClass("bg-warning")
+            $("#progressNextScreenshot").addClass("bg-success")
+            $("#progressNextScreenshot").text("Image processed successfully")
+            break;
+    }
+}
+
+function switchView(view){
+    console.log("set view to " + view)
+    loadViewList(view)
+    var randomVids = [
+        "/video/1.mp4",
+    ]
+    if(view != 0){
+        video.srcObject = null;
+        $("video").attr("src", randomVids[getRndInteger(0, randomVids.length)])
+    }else{
+        if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+                video.srcObject = stream;
+            })
+            .catch(function (err0r) {
+            console.log("Something went wrong!");
+            });
+        }
+    }
+    $("#img2").attr('src', "");
+}
+function getRndInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+$("#btnTakeSS").on("click", (btn)=>{
+    takepicture()
+})
+
+function takepicture() {
+    state = 1;
+    var canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 480;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    //convert to desired file format
+    var data = canvas.toDataURL('image/jpeg');
+
+
+    $.ajax({
+        url: 'http://localhost:81/image',
+        type: 'post',
+        data: {
+            img: data
+        },
+        success: function(response){
+            state = 2;
+            
+            dataUrl = (response.img.slice(0, 2)=="b'")?response.img.slice(2):response.img;
+            dataUrl = (dataUrl[dataUrl.length-1]=="'")?dataUrl.slice(0, -1):dataUrl;
+            $("#img2").attr("src", "data:image/png;base64," + dataUrl)
+            let count = 0, averageScore = 0;
+            for (let x in response.scores){
+                //console.log(response.sx);
+                if(response.scores[x] >= detectionSensitivity){
+                    count += 1;
+                    averageScore += response.scores[x];
+                }
+            }
+            pplCountChart.data.labels.push((new Date()).toLocaleTimeString())
+            pplCountChart.data.datasets[0].data.push(count)
+            pplCountChart.update()
+            while(pplCountChart.data.datasets[0].data.length > 5){
+                pplCountChart.data.labels.shift()
+                pplCountChart.data.datasets[0].data.shift()
+            }
+            averageAccuracyChart.data.labels.push((new Date()).toLocaleTimeString())
+            averageAccuracyChart.data.datasets[0].data.push(averageScore)
+            averageAccuracyChart.update()
+            while(averageAccuracyChart.data.datasets[0].data.length > 5){
+                averageAccuracyChart.data.labels.shift()
+                averageAccuracyChart.data.datasets[0].data.shift()
+            }
+            $("#spanDetectCount").text("People detected: " + count)
+            $("#spanAverage").text("Average percentage: " + Math.round(averageScore/count))
+            setTimeout(()=>{
+                state=0
+            }, 1000)
+        },
+        error: (res)=>{
+            console.log(res);
+        }
+    });
+}
+
+let pplCountChart = new Chart(document.getElementById("chartPeopleCount"), {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{ 
+        data: [],
+        label: "People detected",
+        borderColor: "#3e95cd",
+        fill: false
+      }
+    ]
+  },
+  options: {
+    title: {
+      display: true,
+      text: 'People Detected/time'
+    }
+  }
+});
+
+let averageAccuracyChart = new Chart(document.getElementById("chartAveragePercentage"), {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{ 
+        data: [],
+        label: "Accuracy",
+        borderColor: "#3e95cd",
+        fill: false
+      }
+    ]
+  },
+  options: {
+    title: {
+      display: true,
+      text: 'Accuracy (%)/time'
+    }
+  }
+});
+
+</script>
