@@ -94,6 +94,51 @@ router.get('/main', async function(req, res) {
         })
     }
 });
+router.get("/location", async (req, res)=>{
+
+    let checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+    
+    if (checkValidatorSession == "false") return res.redirect("/user/login")
+    else if (checkValidatorSession != "true") return res.redirect("/user/login?how=did_you_get_here");
+
+    let newbin = await Bin.findAll({})
+    //find all recyclables bins available
+    let binlist = newbin;
+
+    for (var i = 0; i < binlist.length; i++) {
+
+        switch(binlist[i].status){
+            case 0:
+                binlist[i].status = "Inactive"
+                binlist[i].camera_ipaddress = "/img/video-error.png"
+                break;
+            case 1:
+                binlist[i].status = "Active"
+                break;
+            case 2:
+                binlist[i].status = "Warning"
+                break;
+            case 3:
+                binlist[i].status = "Alert"
+                break;
+        }
+    }
+
+
+    let checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+    if (checkValidatorUser == "cleaner") {
+        res.render('user/locationView', { //render page
+            binlist: JSON.stringify(binlist)
+        })
+    } else if (checkValidatorUser == "supervisor") {
+        res.render('user/locationView', { //render page
+            binlist: JSON.stringify(binlist),
+            type: "supervisor"
+        })
+    }
+})
+
 
 
 module.exports = router
