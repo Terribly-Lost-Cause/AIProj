@@ -8,6 +8,34 @@ const saltRounds = 10;
 const Session = require('../models/session');
 const Bin = require('../models/bin');
 
+
+// Add user get and post
+router.get('/addBin', async function(req, res) {
+    const title = 'Add Bin';
+
+    var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+    
+    if (checkValidatorSession == "false"){
+        res.redirect('/user/login')
+    }
+    else if (checkValidatorSession == "true"){
+
+        var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+        if (checkValidatorUser == "cleaner"){
+            res.redirect('/dashboard/main')
+        }
+        else if (checkValidatorUser == "supervisor"){
+            res.render('bin/addBins', { 
+                type: "supervisor",
+                title: title 
+            }) // renders views/user/adduser.handlebars (webpage to key in new user info)
+        }
+    }
+});
+
+
+// Update bin levels
 router.get('/updatelevel/:id', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
