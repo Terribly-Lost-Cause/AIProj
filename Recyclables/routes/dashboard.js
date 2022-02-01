@@ -86,7 +86,11 @@ router.get('/main', async function(req, res) {
                     alertlist.push(binlist[i])
                 }
             }
-
+            
+            inactivelist.sort((a, b) => ((b.current_plastic/b.threshold*100)+(b.current_metal/b.threshold*100)) - ((a.current_plastic/a.threshold*100)+(a.current_metal/a.threshold*100)))
+            activelist.sort((a, b) => ((b.current_plastic/b.threshold*100)+(b.current_metal/b.threshold*100)) - ((a.current_plastic/a.threshold*100)+(a.current_metal/a.threshold*100)))
+            dangerlist.sort((a, b) => ((b.current_plastic/b.threshold*100)+(b.current_metal/b.threshold*100)) - ((a.current_plastic/a.threshold*100)+(a.current_metal/a.threshold*100)))
+            alertlist.sort((a, b) => ((b.current_plastic/b.threshold*100)+(b.current_metal/b.threshold*100)) - ((a.current_plastic/a.threshold*100)+(a.current_metal/a.threshold*100)))
 
             if (checkValidatorUser == "cleaner") {
                 res.render('dashboard/dashboard', { //render page
