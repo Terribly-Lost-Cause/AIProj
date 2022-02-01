@@ -141,7 +141,7 @@ label img {
 </style>
 <body>
 
-<form id="regForm" action="/action_page.php">
+<form id="regForm">
   <!-- One "tab" for each step in the form: -->
   <div class="tab"><h3 style="text-align: center;">Choose items that are plastic</h3>
   <ul>
@@ -164,10 +164,12 @@ label img {
   <div class="tab"><h3 style="text-align: center;">Confirm changes to be made</h3>
     <h3 style="text-align: center;">Plastic Images</h3>
     <ul id="confirm_plastic">
+
     </ul>
 
     <h3 style="text-align: center;">Metal Images</h3>
     <ul id="confirm_metal">
+
     </ul>
   </div>
   <div style="overflow:auto;">
@@ -185,10 +187,34 @@ label img {
 </form>
 
 <script>
+
+var plasticlist = '{{plasticlist}}'
+var metallist = '{{metallist}}'
+
+var plasticarray = plasticlist.split(",")
+var metalarray = metallist.split(",")
 var currentTab = 0; // Current tab is set to be the first tab (0)
 showTab(currentTab); // Display the current tab
 
 function showTab(n) {
+  
+  if (n == 2){
+    document.getElementById("confirm_plastic").innerHTML = "";
+    document.getElementById("confirm_metal").innerHTML = "";
+    for (let i = 0; i < plasticarray.length; i++){
+      if (document.getElementById(plasticarray[i]).checked == true){
+        document.getElementById("confirm_plastic").innerHTML += "<li><input checked='true' type='checkbox' id='" + plasticarray[i] + "' /><label for='" + plasticarray[i] + "'><img src='/img/" + plasticarray[i] + "' /></label></li>"
+      }
+    }
+
+    for (let i = 0; i < metalarray.length; i++){
+      if (document.getElementById(metalarray[i]).checked == true){
+        document.getElementById("confirm_metal").innerHTML = "<li><input checked='true' type='checkbox' id='" + metalarray[i] + "' /><label for='" + metalarray[i] + "'><img src='/img/" + metalarray[i] + "' /></label></li>"
+      }
+    }
+
+  }
+
   // This function will display the specified tab of the form...
   var x = document.getElementsByClassName("tab");
   x[n].style.display = "block";
