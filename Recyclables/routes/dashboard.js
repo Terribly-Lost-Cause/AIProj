@@ -65,28 +65,42 @@ router.get('/main', async function(req, res) {
         Bin.findAll({}).then(newbin => { //find all recyclables bins available
             const binlist = newbin;
 
+            var inactivelist = [];
+            var activelist = [];
+            var dangerlist = [];
+            var alertlist = [];
+
             for (var i = 0; i < binlist.length; i++) {
                 if (binlist[i].status == 0) {
                     binlist[i].status = "Inactive"
                     binlist[i].camera_ipaddress = "/img/video-error.png"
+                    inactivelist.push(binlist[i])
                 } else if (binlist[i].status == 1) {
                     binlist[i].status = "Active"
+                    activelist.push(binlist[i])
                 } else if (binlist[i].status == 2) {
                     binlist[i].status = "Danger"
+                    dangerlist.push(binlist[i])
                 } else if (binlist[i].status == 3) {
                     binlist[i].status = "Alert"
+                    alertlist.push(binlist[i])
                 }
             }
 
 
-
             if (checkValidatorUser == "cleaner") {
                 res.render('dashboard/dashboard', { //render page
-                    binlist: binlist
+                    inactivelist: inactivelist,
+                    activelist: activelist,
+                    dangerlist: dangerlist,
+                    alertlist: alertlist
                 })
             } else if (checkValidatorUser == "supervisor") {
                 res.render('dashboard/dashboard', { //render page
-                    binlist: binlist,
+                    inactivelist: inactivelist,
+                    activelist: activelist,
+                    dangerlist: dangerlist,
+                    alertlist: alertlist,
                     type: "supervisor"
                 })
             }
