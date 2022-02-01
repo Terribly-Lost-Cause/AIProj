@@ -7,6 +7,8 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const Session = require('../models/session');
 const Bin = require('../models/bin');
+const path = require('path');
+const fs = require('fs');
 
 router.get('/main', async function(req, res) {
     const title = 'Overall Dashboard';
@@ -22,8 +24,29 @@ router.get('/main', async function(req, res) {
         if (checkValidatorUser == "cleaner") {
             res.redirect('/dashboard/main')
         } else if (checkValidatorUser == "supervisor") {
+
+            const dir_path = path.join(__dirname, '../public/img');
+            var imageslist = [];
+
+            fs.readdir(dir_path, function (err, files) {
+                //handling error
+                if (err) {
+                    return console.log('Unable to find or open the directory: ' + err);
+                } 
+                //Print the array of images at one go
+                for (var i = 0; i < files.length; i++) {
+                    console.log(files[i])
+                    if (files[i].includes("microbit")){
+                        imageslist.push(files[i])
+                        console.log("true")
+                    }
+                }
+                console.log(imageslist)
+            });
+
             res.render('model/modelManagement', { //render page
-                type: "supervisor"
+                type: "supervisor",
+                imageslist: imageslist
             })
         }
     }
