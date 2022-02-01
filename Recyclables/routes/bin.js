@@ -7,12 +7,19 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const Session = require('../models/session');
 const Bin = require('../models/bin');
+const net = require('net');
 
 
 router.post('/addBin', (req, res) => {
     let regError = []; // Initialise error array
     let bin_id = uuid.uuid();
-    let camera_ipaddress = "https://192.168.1.95:8080//video";
+    let camera_ipaddress = req.body.camera
+    if (net.isIPv4(camera_ipaddress) != 0) {
+        camera_ipaddress = "https://" + camera_ipaddress + ":8080//video";
+    } else {
+        regError.push("Invalid IP Address")
+    }
+
     let location_description = req.body.location;
     let floor_level = req.body.level;
     let status = 1;
@@ -32,8 +39,8 @@ router.post('/addBin', (req, res) => {
                 floor_level: floor_level
             }
         })
-        .then(user => {
-            if (user)
+        .then(bin => {
+            if (bin)
                 regError.push("A bin has already been placed there. Please use another location.") // user has been used, error
 
 
