@@ -162,7 +162,7 @@
 
 var maxScreenshotMs = 3000;
 var state = 0;
-var detectionSensitivity = 20;
+var detectionSensitivity = 10;
 setInterval(increaseProgress, 100)
 var video = document.querySelector("#videoCamera");
 $("#progressNextScreenshot").attr("aria-valuemax", maxScreenshotMs)
@@ -242,6 +242,7 @@ function switchView(view){
     loadViewList(view)
     var randomVids = [
         "/video/1.mp4",
+        "/video/2.mp4",
     ]
     if(view != 0){
         video.srcObject = null;
@@ -306,7 +307,7 @@ function takepicture() {
                 pplCountChart.data.datasets[0].data.shift()
             }
             averageAccuracyChart.data.labels.push((new Date()).toLocaleTimeString())
-            averageAccuracyChart.data.datasets[0].data.push(averageScore)
+            averageAccuracyChart.data.datasets[0].data.push(averageScore/(averageAccuracyChart.data.labels.length))
             averageAccuracyChart.update()
             while(averageAccuracyChart.data.datasets[0].data.length > 5){
                 averageAccuracyChart.data.labels.shift()
