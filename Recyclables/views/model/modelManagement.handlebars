@@ -76,21 +76,101 @@ button:hover {
 .step.finish {
   background-color: #04AA6D;
 }
+
+ul {
+  list-style-type: none;
+}
+
+li {
+  display: inline-block;
+}
+
+input[type="checkbox"] {
+  display: none;
+}
+
+label {
+  border: 1px solid #fff;
+  padding: 10px;
+  display: block;
+  position: relative;
+  margin: 10px;
+  cursor: pointer;
+}
+
+label:before {
+  background-color: white;
+  color: white;
+  content: " ";
+  display: block;
+  border-radius: 50%;
+  border: 1px solid grey;
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 25px;
+  height: 25px;
+  text-align: center;
+  line-height: 28px;
+  transition-duration: 0.4s;
+  transform: scale(0);
+}
+
+label img {
+  height: 100px;
+  width: 100px;
+  transition-duration: 0.2s;
+  transform-origin: 50% 50%;
+}
+
+:checked + label {
+  border-color: #ddd;
+}
+
+:checked + label:before {
+  content: "✓";
+  background-color: grey;
+  transform: scale(1);
+}
+
+:checked + label img {
+  transform: scale(0.9);
+  box-shadow: 0 0 5px #333;
+  z-index: -1;
+}
 </style>
 <body>
 
-<form id="regForm" action="/action_page.php">
+<form id="regForm">
   <!-- One "tab" for each step in the form: -->
   <div class="tab"><h3 style="text-align: center;">Choose items that are plastic</h3>
-    {{#each imageslist}}
-    
+  <ul>
+    {{#each plasticlist}}
+    <li><input checked="true" type="checkbox" id="{{this}}" />
+      <label for="{{this}}"><img src="/img/{{this}}" /></label>
+    </li>
     {{/each}}
+  </ul>
   </div>
   <div class="tab"><h3 style="text-align: center;">Choose items that are metal</h3>
-    
+    <ul>
+    {{#each metallist}}
+    <li><input checked="true" type="checkbox" id="{{this}}" />
+      <label for="{{this}}"><img src="/img/{{this}}" /></label>
+    </li>
+    {{/each}}
+  </ul>
   </div>
   <div class="tab"><h3 style="text-align: center;">Confirm changes to be made</h3>
-    
+    <h3 style="text-align: center;">Plastic Images</h3>
+    <ul id="confirm_plastic">
+
+    </ul>
+
+    <h3 style="text-align: center;">Metal Images</h3>
+    <ul id="confirm_metal">
+
+    </ul>
   </div>
   <div style="overflow:auto;">
     <div style="float:right;">
@@ -107,10 +187,34 @@ button:hover {
 </form>
 
 <script>
+
+var plasticlist = '{{plasticlist}}'
+var metallist = '{{metallist}}'
+
+var plasticarray = plasticlist.split(",")
+var metalarray = metallist.split(",")
 var currentTab = 0; // Current tab is set to be the first tab (0)
 showTab(currentTab); // Display the current tab
 
 function showTab(n) {
+  
+  if (n == 2){
+    document.getElementById("confirm_plastic").innerHTML = "";
+    document.getElementById("confirm_metal").innerHTML = "";
+    for (let i = 0; i < plasticarray.length; i++){
+      if (document.getElementById(plasticarray[i]).checked == true){
+        document.getElementById("confirm_plastic").innerHTML += "<li><input checked='true' type='checkbox' id='" + plasticarray[i] + "' /><label for='" + plasticarray[i] + "'><img src='/img/" + plasticarray[i] + "' /></label></li>"
+      }
+    }
+
+    for (let i = 0; i < metalarray.length; i++){
+      if (document.getElementById(metalarray[i]).checked == true){
+        document.getElementById("confirm_metal").innerHTML = "<li><input checked='true' type='checkbox' id='" + metalarray[i] + "' /><label for='" + metalarray[i] + "'><img src='/img/" + metalarray[i] + "' /></label></li>"
+      }
+    }
+
+  }
+
   // This function will display the specified tab of the form...
   var x = document.getElementsByClassName("tab");
   x[n].style.display = "block";

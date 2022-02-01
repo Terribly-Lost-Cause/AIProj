@@ -213,31 +213,32 @@ figure {
       <h3>Overview Dashboard for Recyclable Bins</h3>
       <p>Last refreshed: <span id = "datetime"></span></p>
     </div>
-
-    <div class="row">
-    {{#each binlist}}
-        <div class="col-sm-4">
-          <div class="well" id="main">
-            <span>
-            <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
-            <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;">Clear Bin</button></a>
-</span>
-            <p><span style="width: 80%; float:left; display: inline-block; ">Level {{dataValues.floor_level}}</span><span style="display: inline-block; float:right">{{dataValues.status}}</span></p>
-            <img width="100%" height="100%" src="{{dataValues.camera_ipaddress}}"></img>
-            <br>
-            <br>
-            <h3 id="{{dataValues.bin_id}}_plastic"style="margin: 0%">Plastic</h3>
-            <div id="{{dataValues.bin_id}}_{{dataValues.current_plastic}}_{{dataValues.threshold}}_plastic" style='background-color:Red; width:100%'>
-              <p style="color: Red; text-align: center; opacity: 0">100%</p>
-            </div>
-            <br>
-            <br>
-            <h3 id="{{dataValues.bin_id}}_metal" style="margin: 0%">Metal</h3>
-            <div id="{{dataValues.bin_id}}_{{dataValues.current_metal}}_{{dataValues.threshold}}_metal" style='background-color:Green; width:100%'>
-              <p style="color: Green; text-align: center; opacity: 0">100% </p>
-            </div>
-          </div>
-      {{/each}}
+<button class="accordion"><h3 style="margin: 0">Alert: {{alertlist.length}}</h3></button>
+    <div class="panel">
+      <div class="row">
+        {{#each alertlist}}
+            <div class="col-sm-4">
+              <div class="well" id="main">
+                <span>
+                <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
+                <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;">Clear Bin</button></a></span>
+                <p><span style="width: 80%; float:left; display: inline-block; ">Level {{dataValues.floor_level}}</span><span style="display: inline-block; float:right">{{dataValues.status}}</span></p>
+                <img width="100%" height="100%" src="{{dataValues.camera_ipaddress}}"></img>
+                <br>
+                <br>
+                <h3 id="{{dataValues.bin_id}}_plastic"style="margin: 0%">Plastic</h3>
+                <div id="{{dataValues.bin_id}}_{{dataValues.current_plastic}}_{{dataValues.threshold}}_plastic" style='background-color:Red; width:100%'>
+                  <p style="color: Red; text-align: center; opacity: 0">100%</p>
+                </div>
+                <br>
+                <br>
+                <h3 id="{{dataValues.bin_id}}_metal" style="margin: 0%">Metal</h3>
+                <div id="{{dataValues.bin_id}}_{{dataValues.current_metal}}_{{dataValues.threshold}}_metal" style='background-color:Green; width:100%'>
+                  <p style="color: Green; text-align: center; opacity: 0">100% </p>
+                </div>
+              </div>
+              </div>
+          {{/each}}
       </div>
     </div>
 

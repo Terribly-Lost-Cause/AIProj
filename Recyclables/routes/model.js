@@ -26,7 +26,8 @@ router.get('/main', async function(req, res) {
         } else if (checkValidatorUser == "supervisor") {
 
             const dir_path = path.join(__dirname, '../public/img');
-            var imageslist = [];
+            var plasticlist = [];
+            var metallist = [];
 
             fs.readdir(dir_path, function (err, files) {
                 //handling error
@@ -36,17 +37,19 @@ router.get('/main', async function(req, res) {
                 //Print the array of images at one go
                 for (var i = 0; i < files.length; i++) {
                     console.log(files[i])
-                    if (files[i].includes("microbit")){
-                        imageslist.push(files[i])
-                        console.log("true")
+                    if (files[i].includes("plastic")){
+                        plasticlist.push(files[i])
+                    }
+                    else if (files[i].includes("metal")){
+                        metallist.push(files[i])
                     }
                 }
-                console.log(imageslist)
             });
 
             res.render('model/modelManagement', { //render page
                 type: "supervisor",
-                imageslist: imageslist
+                plasticlist: plasticlist,
+                metallist: metallist
             })
         }
     }
