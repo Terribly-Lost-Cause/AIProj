@@ -8,7 +8,59 @@ const saltRounds = 10;
 const Session = require('../models/session');
 const Bin = require('../models/bin');
 
+// Get bins routes get
+router.get('/binManagement', async function(req, res) {
 
+    var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+    
+    if (checkValidatorSession == "false"){
+        res.redirect('/user/login')
+    }
+    else if (checkValidatorSession == "true"){
+
+        var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+        if (checkValidatorUser == "cleaner"){
+            res.redirect('/dashboard/main')
+        }
+        else if (checkValidatorUser == "supervisor"){
+            Bin.findAll({}).then(bin => { //find all users
+                if (bin != undefined) { //pagination
+                    var binlist = bin;
+
+                    for (var i = 0; i < binlist.length; i++) {
+                        if (binlist[i].status == 0) {
+                            binlist[i].status = "Inactive"
+                            // set the action for the binManagement
+                            binlist[i].remarks = 0
+                        } else if (binlist[i].status == 1) {
+                            binlist[i].status = "Active"
+                            // set the action for the binManagement
+                            binlist[i].remarks = 1
+                        } else if (binlist[i].status == 2) {
+                            binlist[i].status = "Danger"
+                            // set the action for the binManagement
+                            binlist[i].remarks = 1
+                        } else if (binlist[i].status == 3) {
+                            binlist[i].status = "Alert"
+                            // set the action for the binManagement
+                            binlist[i].remarks = 1
+                        }
+                    }
+
+                    res.render('bin/binManagement', { //render page
+                        "bin": binlist,
+                        type: "supervisor"
+                    })
+                }
+            }) // renders views/bin/binManagement.handlebars (webpage to key in new user info)
+        }
+    }
+});
+
+
+
+// Add bin routes for get and post
 router.post('/addBin', (req, res) => {
     let regError = []; // Initialise error array
     let bin_id = uuid.uuid();
@@ -22,8 +74,6 @@ router.post('/addBin', (req, res) => {
     let current_metal = 0;
     let threshold = 50
     let remarks = req.body.remarks
-
-    // Pre submission checks for password
 
 
     Bin.findOne({
@@ -58,7 +108,7 @@ router.post('/addBin', (req, res) => {
                         threshold,
                         remarks
                     }).then(bin => {
-                        res.redirect('/dashboard/main'); // Goes back to main user management page
+                        res.redirect('/bin/binManagement'); // Goes back to main user management page
                     })
                     .catch(err => console.log(err))
             }
