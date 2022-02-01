@@ -9,7 +9,59 @@ const Session = require('../models/session');
 const Bin = require('../models/bin');
 const net = require('net');
 
+// Get bins routes get
+router.get('/binManagement', async function(req, res) {
 
+    var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+    
+    if (checkValidatorSession == "false"){
+        res.redirect('/user/login')
+    }
+    else if (checkValidatorSession == "true"){
+
+        var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+        if (checkValidatorUser == "cleaner"){
+            res.redirect('/dashboard/main')
+        }
+        else if (checkValidatorUser == "supervisor"){
+            Bin.findAll({}).then(bin => { //find all users
+                if (bin != undefined) { //pagination
+                    var binlist = bin;
+
+                    for (var i = 0; i < binlist.length; i++) {
+                        if (binlist[i].status == 0) {
+                            binlist[i].status = "Inactive"
+                            // set the action for the binManagement
+                            binlist[i].remarks = 0
+                        } else if (binlist[i].status == 1) {
+                            binlist[i].status = "Active"
+                            // set the action for the binManagement
+                            binlist[i].remarks = 1
+                        } else if (binlist[i].status == 2) {
+                            binlist[i].status = "Danger"
+                            // set the action for the binManagement
+                            binlist[i].remarks = 1
+                        } else if (binlist[i].status == 3) {
+                            binlist[i].status = "Alert"
+                            // set the action for the binManagement
+                            binlist[i].remarks = 1
+                        }
+                    }
+
+                    res.render('bin/binManagement', { //render page
+                        "bin": binlist,
+                        type: "supervisor"
+                    })
+                }
+            }) // renders views/bin/binManagement.handlebars (webpage to key in new user info)
+        }
+    }
+});
+
+
+
+// Add bin routes for get and post
 router.post('/addBin', (req, res) => {
     let regError = []; // Initialise error array
     let bin_id = uuid.uuid();
@@ -29,8 +81,6 @@ router.post('/addBin', (req, res) => {
     let current_metal = 0;
     let threshold = 50
     let remarks = req.body.remarks
-
-    // Pre submission checks for password
 
 
     Bin.findOne({
@@ -65,7 +115,7 @@ router.post('/addBin', (req, res) => {
                         threshold,
                         remarks
                     }).then(bin => {
-                        res.redirect('/dashboard/main'); // Goes back to main user management page
+                        res.redirect('/bin/binManagement'); // Goes back to main user management page
                     })
                     .catch(err => console.log(err))
             }
@@ -132,6 +182,81 @@ router.get('/updatelevel/:id', async function(req, res) {
                 }
 
             })
+    }
+})
+
+
+// get update status
+router.get('/updatestatus/:id', async function(req, res) {
+
+    var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+    
+    if (checkValidatorSession == "false"){
+        res.redirect('/user/login')
+    }
+    else if (checkValidatorSession == "true"){
+
+        var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+        if (checkValidatorUser == "cleaner"){
+            res.redirect('/dashboard/main')
+        }
+        else if (checkValidatorUser == "supervisor"){
+                Bin.findOne({ where: { bin_id: req.params.id } })
+                .then(bin => {
+                    if (bin){
+                        var stat = bin.status; // Initialise the user status from db
+                        if (stat == 0) {
+
+                            let curPlastic = bin.current_plastic
+                            let curMetal = bin.current_metal
+                            let threshold = bin.threshold
+
+                            let plastic_level = curPlastic / threshold * 100
+                            let metal_level = curMetal / threshold * 100
+
+                            let level_update = null;
+                            if (plastic_level > metal_level) {
+                                level_update = plastic_level
+                            } else {
+                                level_update = metal_level
+                            }
+
+                            if (level_update < 50) {
+                                var newstat = 1
+                            } else if ((level_update >= 50 && level_update < 75)) {
+                                var newstat = 2
+                            } else if ((level_update >= 75)) {
+                                var newstat = 3
+                            }
+                        } else {
+                            var newstat = 0; // If button click make status active
+                        }
+            
+                        Bin.update({
+                            status: newstat, // Update new status and the button value
+                            //action: stt
+                        }, {
+                            where: {
+                                bin_id: req.params.id // FInd the user who is being changed
+                            }
+                        })
+                        .then(() => { // alert success update
+                            res.send(`
+                                <script>alert("Changes made successfully saved")
+                                setTimeout(window.location = "/bin/binManagement", 1000)</script>
+                            `);
+                        })
+                    }
+                    else{
+                        res.send(`
+                                <script>alert("Bin not found")
+                                setTimeout(window.location = "/bin/binManagement", 1000)</script>
+                            `);
+                    }
+                    
+                })
+        }
     }
 })
 

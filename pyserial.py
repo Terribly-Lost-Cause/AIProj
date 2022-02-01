@@ -9,7 +9,7 @@ import numpy as np
 #from PIL import Image 
 import sys
 import mysql.connector
-from sqlalchemy import over
+#from sqlalchemy import over
 
 
 TIMER = int(1)

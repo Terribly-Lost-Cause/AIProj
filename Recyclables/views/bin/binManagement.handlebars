@@ -1,0 +1,53 @@
+<style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+</style>
+
+<div style = "margin-left: 5%; margin-right: 5%; margin-top: 3%; width: 90%;">
+
+    {{#if bin}}
+    <a href="/bin/addBin"><button class="btn btn-primary">Add new bin locations</button></a>
+    <table>
+    <tr>
+        <th>Floor Level</th>
+        <th>Location Description</th>
+        <th>Camera IP Address</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    {{#each bin}}
+    <tr>
+        <td>{{dataValues.floor_level}}</td>
+        <td>{{dataValues.location_description}}</td>
+        <td>{{dataValues.camera_ipaddress}}</td>
+        <td>{{dataValues.status}}</td>
+        {{#if dataValues.remarks}}
+        <td>
+            <a href="/bin/updatestatus/{{dataValues.bin_id}}"><button class="btn btn-danger" style="float: left;">Deactivate</button></a>
+            <a href="/bin/updateinformation/{{dataValues.bin_id}}"><button class="btn btn-info" style="float: right;">Update Information</button></a>
+        </td>
+        {{else}}
+        <td>
+            <a href="/bin/updatestatus/{{dataValues.bin_id}}"><button class="btn btn-success" style="float: left;">Activate</button></a>
+            <a href="/bin/updateinformation/{{dataValues.bin_id}}"><button class="btn btn-info" style="float: right;">Update Information</button></a>
+        </td>
+        {{/if}}
+    </tr>
+    {{/each}}
+    </table>
+
+    {{/if}}
+</div>
