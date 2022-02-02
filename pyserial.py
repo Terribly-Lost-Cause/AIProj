@@ -10,7 +10,10 @@ import numpy as np
 import sys
 import mysql.connector
 #from sqlalchemy import over
+import shutil
+import uuid
 
+from sqlalchemy import null
 
 TIMER = int(1)
 cap = cv2.VideoCapture(0)
@@ -107,18 +110,18 @@ def main(file, bin_id):
                 updatecursor.execute(updatesql, updateval)
                 mydb.commit()
             
-            
+            #shutil.move(file, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4()))
             ser_micro.write(servodelimiter.encode('utf-8') + material.encode('utf-8'))
             ser_micro.close()
-            return "success"
+            return "success", material
         else:
             print("Error")
             ser_micro.close()
-            return "error"
+            return "error",null
     except ReadTimeout:
             print("Timeout, try again")
             ser_micro.close()
-            return "error"
+            return "error",null
 
 def takeSS(cap, TIMER, trial):     
     # Read and display each frame
@@ -168,13 +171,16 @@ while cap.isOpened():
             trial+=1
             image = cv2.resize(frame1, (1280,720))
             filename, img = takeSS(cap, TIMER, trial)
-            status = main(filename,bin_id)
+            status = "error"
+            material = ""
+            
+            while status == "error":
+                status,material = main(filename,bin_id)
+            shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
+
             frame1 = img
             frame2 = img
-            if status == "error":
-                status = main(filename,bin_id)
-            else:
-                break
+            break
         pass
     
     

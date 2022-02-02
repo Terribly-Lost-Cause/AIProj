@@ -8,53 +8,50 @@ const saltRounds = 10;
 const Session = require('../models/session');
 const Bin = require('../models/bin');
 const net = require('net');
-
 // Get bins routes get
 router.get('/binManagement', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-    
-    if (checkValidatorSession == "false"){
+
+    if (checkValidatorSession == "false") {
         res.redirect('/user/login')
-    }
-    else if (checkValidatorSession == "true"){
+    } else if (checkValidatorSession == "true") {
 
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
 
-        if (checkValidatorUser == "cleaner"){
+        if (checkValidatorUser == "cleaner") {
             res.redirect('/dashboard/main')
-        }
-        else if (checkValidatorUser == "supervisor"){
+        } else if (checkValidatorUser == "supervisor") {
             Bin.findAll({}).then(bin => { //find all users
-                if (bin != undefined) { //pagination
-                    var binlist = bin;
+                    if (bin != undefined) { //pagination
+                        var binlist = bin;
 
-                    for (var i = 0; i < binlist.length; i++) {
-                        if (binlist[i].status == 0) {
-                            binlist[i].status = "Inactive"
-                            // set the action for the binManagement
-                            binlist[i].remarks = 0
-                        } else if (binlist[i].status == 1) {
-                            binlist[i].status = "Active"
-                            // set the action for the binManagement
-                            binlist[i].remarks = 1
-                        } else if (binlist[i].status == 2) {
-                            binlist[i].status = "Danger"
-                            // set the action for the binManagement
-                            binlist[i].remarks = 1
-                        } else if (binlist[i].status == 3) {
-                            binlist[i].status = "Alert"
-                            // set the action for the binManagement
-                            binlist[i].remarks = 1
+                        for (var i = 0; i < binlist.length; i++) {
+                            if (binlist[i].status == 0) {
+                                binlist[i].status = "Inactive"
+                                    // set the action for the binManagement
+                                binlist[i].remarks = 0
+                            } else if (binlist[i].status == 1) {
+                                binlist[i].status = "Active"
+                                    // set the action for the binManagement
+                                binlist[i].remarks = 1
+                            } else if (binlist[i].status == 2) {
+                                binlist[i].status = "Danger"
+                                    // set the action for the binManagement
+                                binlist[i].remarks = 1
+                            } else if (binlist[i].status == 3) {
+                                binlist[i].status = "Alert"
+                                    // set the action for the binManagement
+                                binlist[i].remarks = 1
+                            }
                         }
-                    }
 
-                    res.render('bin/binManagement', { //render page
-                        "bin": binlist,
-                        type: "supervisor"
-                    })
-                }
-            }) // renders views/bin/binManagement.handlebars (webpage to key in new user info)
+                        res.render('bin/binManagement', { //render page
+                            "bin": binlist,
+                            type: "supervisor"
+                        })
+                    }
+                }) // renders views/bin/binManagement.handlebars (webpage to key in new user info)
         }
     }
 });
@@ -66,12 +63,12 @@ router.post('/addBin', (req, res) => {
     let regError = []; // Initialise error array
     let bin_id = uuid.uuid();
     let camera_ipaddress = req.body.camera
+    console.log("]]]]]]]]]]]]]]]", camera_ipaddress)
     if (net.isIPv4(camera_ipaddress) != 0) {
         camera_ipaddress = "https://" + camera_ipaddress + ":8080//video";
     } else {
-        regError.push("Invalid IP Address")
+        regError.push(camera_ipaddress, "is an invalid IP Address")
     }
-
     let location_description = req.body.location;
     let floor_level = req.body.level;
     let status = 1;
@@ -94,8 +91,6 @@ router.post('/addBin', (req, res) => {
         .then(bin => {
             if (bin)
                 regError.push("A bin has already been placed there. Please use another location.") // user has been used, error
-
-
             if (regError.length > 0) { // see if there is error, exclude first one
                 res.render('bin/addBins', {
                     layout: 'main.handlebars',
@@ -173,10 +168,7 @@ router.get('/updatelevel/:id', async function(req, res) {
                             }
                         })
                         .then(() => { // alert success update
-                            res.send(`
-                        <script>alert("Bin has been successfully updated to cleared")
-                        setTimeout(window.location = "/dashboard/main", 1000)</script>
-                    `);
+                            res.redirect('/dashboard/main')
                         })
                 } else {
                     res.send(`
@@ -194,21 +186,19 @@ router.get('/updatelevel/:id', async function(req, res) {
 router.get('/updatestatus/:id', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-    
-    if (checkValidatorSession == "false"){
+
+    if (checkValidatorSession == "false") {
         res.redirect('/user/login')
-    }
-    else if (checkValidatorSession == "true"){
+    } else if (checkValidatorSession == "true") {
 
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
 
-        if (checkValidatorUser == "cleaner"){
+        if (checkValidatorUser == "cleaner") {
             res.redirect('/dashboard/main')
-        }
-        else if (checkValidatorUser == "supervisor"){
-                Bin.findOne({ where: { bin_id: req.params.id } })
+        } else if (checkValidatorUser == "supervisor") {
+            Bin.findOne({ where: { bin_id: req.params.id } })
                 .then(bin => {
-                    if (bin){
+                    if (bin) {
                         var stat = bin.status; // Initialise the user status from db
                         if (stat == 0) {
 
@@ -236,29 +226,72 @@ router.get('/updatestatus/:id', async function(req, res) {
                         } else {
                             var newstat = 0; // If button click make status active
                         }
-            
+
                         Bin.update({
-                            status: newstat, // Update new status and the button value
-                            //action: stt
-                        }, {
-                            where: {
-                                bin_id: req.params.id // FInd the user who is being changed
-                            }
-                        })
-                        .then(() => { // alert success update
-                            res.send(`
+                                status: newstat, // Update new status and the button value
+                                //action: stt
+                            }, {
+                                where: {
+                                    bin_id: req.params.id // FInd the user who is being changed
+                                }
+                            })
+                            .then(() => { // alert success update
+                                res.send(`
                                 <script>alert("Changes made successfully saved")
                                 setTimeout(window.location = "/bin/binManagement", 1000)</script>
                             `);
-                        })
-                    }
-                    else{
+                            })
+                    } else {
                         res.send(`
                                 <script>alert("Bin not found")
                                 setTimeout(window.location = "/bin/binManagement", 1000)</script>
                             `);
                     }
-                    
+
+                })
+        }
+    }
+})
+
+
+router.get('/updateinformation/:id', async function(req, res) {
+
+
+    var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+
+    if (checkValidatorSession == "false") {
+        res.redirect('/user/login')
+    } else if (checkValidatorSession == "true") {
+
+        var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+        if (checkValidatorUser == "cleaner") {
+            res.redirect('/dashboard/main')
+        } else if (checkValidatorUser == "supervisor") {
+            Bin.findOne({ where: { bin_id: req.params.id } })
+                .then(bin => {
+                    var binData = bin
+                    console.log(binData)
+                    binID = bin.id
+                    Camera = req.body.camera
+
+                    ipaddress = bin.camera_ipaddress;
+                    ipaddress = ipaddress.split('https://').pop();
+                    ipaddress = ipaddress.split(":")[0];
+                    location = req.body.location
+                    lvl = req.body.level
+                    threshold = req.body.threshold
+                    remark = req.body.remarks
+                    console.log(bin.camera_ipaddress)
+                    res.render('bin/addBins', {
+                        "binData": bin,
+                        binID,
+                        Camera: ipaddress,
+                        location: bin.location_description,
+                        lvl: bin.floor_level,
+                        threshold: bin.threshold,
+                        remark: bin.remarks
+                    })
                 })
         }
     }
@@ -290,5 +323,66 @@ router.post("/updatetraffic", async (req, res)=>{
             return res.json({"err": "true", "msg": "Invalid value"} );
         }
     }else return res.json({"err": "true", "msg": "Invalid format"} );
+router.post('/updateinformation/:id', async function(req, res) {
+    let regError = []; // Initialise error array
+    let camera_ipaddress = req.body.camera
+    console.log("\\\\\\\\\\\\\\", net.isIPv4(camera_ipaddress))
+    if (net.isIPv4(camera_ipaddress) == false) {
+        regError.push("Invalid IP Address")
+    } else {
+        camera_ipaddress = "https://" + camera_ipaddress + ":8080//video";
+    }
+    var binId = req.params.id
+    console.log("/////////////", regError)
+
+    let location_description = req.body.location;
+    let floor_level = req.body.level;
+    let status = 1;
+    let overall_plastic = 0;
+    let overall_metal = 0;
+    let current_plastic = 0;
+    let current_metal = 0;
+    let threshold = req.body.threshold
+    let remarks = req.body.remarks
+
+
+    Bin.findOne({
+
+        })
+        .then(bin => {
+            if (regError.length > 0) { // see if there is error, exclude first one
+                res.render('bin/addBins', {
+                    layout: 'main.handlebars',
+                    regError: regError,
+                    type: "supervisor",
+                    location_description,
+                    floor_level,
+                    threshold,
+                    remarks
+                });
+            } else {
+                // To insert a record into the User table
+                Bin.update({
+                        camera_ipaddress,
+                        location_description,
+                        floor_level,
+                        status,
+                        overall_plastic,
+                        overall_metal,
+                        current_plastic,
+                        current_metal,
+                        threshold,
+                        remarks
+                    }, {
+                        where: {
+                            bin_id: req.params.id
+                        }
+                    }).then(bin => {
+                        res.redirect('/bin/binManagement'); // Goes back to main user management page
+                    })
+                    .catch(err => console.log(err))
+
+            }
+        })
 })
-module.exports = router
+module.exports = router;
