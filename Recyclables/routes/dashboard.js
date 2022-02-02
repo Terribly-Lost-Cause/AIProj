@@ -10,6 +10,8 @@ const Bin = require('../models/bin');
 
 router.get('/main', async function(req, res) {
     const title = 'Overall Dashboard';
+    var https = require('https');
+
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
 
@@ -23,6 +25,12 @@ router.get('/main', async function(req, res) {
             let updatedstatus = null
 
             for (var i = 0; i < oldbinlist.length; i++) {
+                https.get(oldbinlist[i].camera_ipaddress, function(res) {
+                    console.log("statusCode: ", res.statusCode); // <======= Here's the status code 
+                    console.log("headers: ", res.headers);
+                    res.on('data', function(d) { process.stdout.write(d); });
+                }).on('error', function(e) { console.error(e); });
+
                 let binid = oldbinlist[i].bin_id
                 let status = oldbinlist[i].status
                 let curPlastic = oldbinlist[i].current_plastic
@@ -86,11 +94,11 @@ router.get('/main', async function(req, res) {
                     alertlist.push(binlist[i])
                 }
             }
-            
-            inactivelist.sort((a, b) => ((b.current_plastic/b.threshold*100)+(b.current_metal/b.threshold*100)) - ((a.current_plastic/a.threshold*100)+(a.current_metal/a.threshold*100)))
-            activelist.sort((a, b) => ((b.current_plastic/b.threshold*100)+(b.current_metal/b.threshold*100)) - ((a.current_plastic/a.threshold*100)+(a.current_metal/a.threshold*100)))
-            dangerlist.sort((a, b) => ((b.current_plastic/b.threshold*100)+(b.current_metal/b.threshold*100)) - ((a.current_plastic/a.threshold*100)+(a.current_metal/a.threshold*100)))
-            alertlist.sort((a, b) => ((b.current_plastic/b.threshold*100)+(b.current_metal/b.threshold*100)) - ((a.current_plastic/a.threshold*100)+(a.current_metal/a.threshold*100)))
+
+            inactivelist.sort((a, b) => ((b.current_plastic / b.threshold * 100) + (b.current_metal / b.threshold * 100)) - ((a.current_plastic / a.threshold * 100) + (a.current_metal / a.threshold * 100)))
+            activelist.sort((a, b) => ((b.current_plastic / b.threshold * 100) + (b.current_metal / b.threshold * 100)) - ((a.current_plastic / a.threshold * 100) + (a.current_metal / a.threshold * 100)))
+            dangerlist.sort((a, b) => ((b.current_plastic / b.threshold * 100) + (b.current_metal / b.threshold * 100)) - ((a.current_plastic / a.threshold * 100) + (a.current_metal / a.threshold * 100)))
+            alertlist.sort((a, b) => ((b.current_plastic / b.threshold * 100) + (b.current_metal / b.threshold * 100)) - ((a.current_plastic / a.threshold * 100) + (a.current_metal / a.threshold * 100)))
 
             if (checkValidatorUser == "cleaner") {
                 res.render('dashboard/dashboard', { //render page
@@ -111,20 +119,20 @@ router.get('/main', async function(req, res) {
         })
     }
 });
-router.get("/location", async (req, res)=>{
+router.get("/location", async(req, res) => {
 
     let checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-    
+
     if (checkValidatorSession == "false") return res.redirect("/user/login")
     else if (checkValidatorSession != "true") return res.redirect("/user/login?how=did_you_get_here");
 
     let newbin = await Bin.findAll({})
-    //find all recyclables bins available
+        //find all recyclables bins available
     let binlist = newbin;
 
     for (var i = 0; i < binlist.length; i++) {
 
-        switch(binlist[i].status){
+        switch (binlist[i].status) {
             case 0:
                 binlist[i].status = "Inactive"
                 binlist[i].camera_ipaddress = "/img/video-error.png"

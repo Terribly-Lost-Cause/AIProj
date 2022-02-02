@@ -63,12 +63,12 @@ router.post('/addBin', (req, res) => {
     let regError = []; // Initialise error array
     let bin_id = uuid.uuid();
     let camera_ipaddress = req.body.camera
+    console.log("]]]]]]]]]]]]]]]", camera_ipaddress)
     if (net.isIPv4(camera_ipaddress) != 0) {
         camera_ipaddress = "https://" + camera_ipaddress + ":8080//video";
     } else {
-        regError.push("Invalid IP Address")
+        regError.push(camera_ipaddress, "is an invalid IP Address")
     }
-
     let location_description = req.body.location;
     let floor_level = req.body.level;
     let status = 1;
@@ -78,8 +78,6 @@ router.post('/addBin', (req, res) => {
     let current_metal = 0;
     let threshold = 50
     let remarks = req.body.remarks
-
-
     Bin.findOne({
             where: {
                 location_description: location_description,
@@ -89,8 +87,6 @@ router.post('/addBin', (req, res) => {
         .then(bin => {
             if (bin)
                 regError.push("A bin has already been placed there. Please use another location.") // user has been used, error
-
-
             if (regError.length > 0) { // see if there is error, exclude first one
                 res.render('bin/addBins', {
                     layout: 'main.handlebars',
@@ -251,4 +247,110 @@ router.get('/updatestatus/:id', async function(req, res) {
     }
 })
 
+
+router.get('/updateinformation/:id', async function(req, res) {
+
+
+    var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+
+    if (checkValidatorSession == "false") {
+        res.redirect('/user/login')
+    } else if (checkValidatorSession == "true") {
+
+        var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+        if (checkValidatorUser == "cleaner") {
+            res.redirect('/dashboard/main')
+        } else if (checkValidatorUser == "supervisor") {
+            Bin.findOne({ where: { bin_id: req.params.id } })
+                .then(bin => {
+                    var binData = bin
+                    console.log(binData)
+                    binID = bin.id
+                    Camera = req.body.camera
+
+                    ipaddress = bin.camera_ipaddress;
+                    ipaddress = ipaddress.split('https://').pop();
+                    ipaddress = ipaddress.split(":")[0];
+                    location = req.body.location
+                    lvl = req.body.level
+                    threshold = req.body.threshold
+                    remark = req.body.remarks
+                    console.log(bin.camera_ipaddress)
+                    res.render('bin/addBins', {
+                        "binData": bin,
+                        binID,
+                        Camera: ipaddress,
+                        location: bin.location_description,
+                        lvl: bin.floor_level,
+                        threshold: bin.threshold,
+                        remark: bin.remarks
+                    })
+                })
+        }
+    }
+})
+
+router.post('/updateinformation/:id', async function(req, res) {
+    let regError = []; // Initialise error array
+    let camera_ipaddress = req.body.camera
+    console.log("\\\\\\\\\\\\\\", net.isIPv4(camera_ipaddress))
+    if (net.isIPv4(camera_ipaddress) == false) {
+        regError.push("Invalid IP Address")
+    } else {
+        camera_ipaddress = "https://" + camera_ipaddress + ":8080//video";
+    }
+    var binId = req.params.id
+    console.log("/////////////", regError)
+
+    let location_description = req.body.location;
+    let floor_level = req.body.level;
+    let status = 1;
+    let overall_plastic = 0;
+    let overall_metal = 0;
+    let current_plastic = 0;
+    let current_metal = 0;
+    let threshold = req.body.threshold
+    let remarks = req.body.remarks
+
+
+    Bin.findOne({
+
+        })
+        .then(bin => {
+            if (regError.length > 0) { // see if there is error, exclude first one
+                res.render('bin/addBins', {
+                    layout: 'main.handlebars',
+                    regError: regError,
+                    type: "supervisor",
+                    location_description,
+                    floor_level,
+                    threshold,
+                    remarks
+                });
+            } else {
+                // To insert a record into the User table
+                Bin.update({
+                        camera_ipaddress,
+                        location_description,
+                        floor_level,
+                        status,
+                        overall_plastic,
+                        overall_metal,
+                        current_plastic,
+                        current_metal,
+                        threshold,
+                        remarks
+                    }, {
+                        where: {
+                            bin_id: req.params.id
+                        }
+                    }).then(bin => {
+                        res.redirect('/bin/binManagement'); // Goes back to main user management page
+                    })
+                    .catch(err => console.log(err))
+
+            }
+        })
+})
 module.exports = router

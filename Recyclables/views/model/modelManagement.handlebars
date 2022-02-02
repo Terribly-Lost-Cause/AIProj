@@ -201,15 +201,18 @@ function showTab(n) {
   if (n == 2){
     document.getElementById("confirm_plastic").innerHTML = "";
     document.getElementById("confirm_metal").innerHTML = "";
+    console.log(plasticarray)
+    console.log(metalarray)
     for (let i = 0; i < plasticarray.length; i++){
       if (document.getElementById(plasticarray[i]).checked == true){
+        
         document.getElementById("confirm_plastic").innerHTML += "<li><input checked='true' type='checkbox' id='" + plasticarray[i] + "' /><label for='" + plasticarray[i] + "'><img src='/img/" + plasticarray[i] + "' /></label></li>"
       }
     }
 
-    for (let i = 0; i < metalarray.length; i++){
-      if (document.getElementById(metalarray[i]).checked == true){
-        document.getElementById("confirm_metal").innerHTML = "<li><input checked='true' type='checkbox' id='" + metalarray[i] + "' /><label for='" + metalarray[i] + "'><img src='/img/" + metalarray[i] + "' /></label></li>"
+    for (let y = 0; y < metalarray.length; y++){
+      if (document.getElementById(metalarray[y]).checked == true){
+        document.getElementById("confirm_metal").innerHTML += "<li><input checked='true' type='checkbox' id='" + metalarray[y] + "' /><label for='" + metalarray[y] + "'><img src='/img/" + metalarray[y] + "' /></label></li>"
       }
     }
 
