@@ -6,6 +6,10 @@ const dashboardRoute = require('./dashboard');
 const binRoute = require('./bin');
 const modelRoute = require('./model');
 
+router.use(function (req, res, next) {
+    console.log(req.path);
+    next();
+  });
 router.use('/user', userRoute)
 router.use('/dashboard', dashboardRoute)
 router.use('/bin', binRoute)

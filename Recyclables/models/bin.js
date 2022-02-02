@@ -35,6 +35,12 @@ const session = db.define('bin', {
     },
     remarks: {
         type: Sequelize.STRING
+    },
+    crowdThreshold: {
+        type: Sequelize.INTEGER
+    }, 
+    crowdFill: {
+        type: Sequelize.INTEGER
     }
 });
 module.exports = session;
