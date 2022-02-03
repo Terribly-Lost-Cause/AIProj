@@ -75,6 +75,7 @@ input {
 					<label for="camera" >Camera Address</label>
 					<br>
 					<div class="input-box">
+						
   					<input name="camera" maxlength="15" value = "{{Camera}}" />
 
   					<span id="urlStart">https://</span>
@@ -97,39 +98,50 @@ input {
 						{{else}}
 					<input class="form-control"  name="level" type="number" id="level" value="{{lvl}}">
 					{{/if}}
-					</div>
-
-					<div style= "display: inline-block; float:right;">
-						<label for="threshold">Rubbish Threshold</label>
-					<input type="number" name="threshold" class="form-control" value="" min="0" required>
-
-					<div style= "display: inline-block; float:right;">
-						<label for="threshold">Crowd Threshold</label>
-					<input type="number" name="crowdthreshold" class="form-control" value="" min="0" required>
-					</div>
-					
-				
-					
-				</div>
-				<div class="form-group">
-					
+					<div class="form-group">
 					<label for="remarks">Remarks</label>
 					{{#if remarks}}
 					<input type="text" name="remarks" class="form-control" value="{{remarks}}">
 					{{else}}
 					<input type="text" name="remarks" class="form-control" value="{{remark}}">
 					{{/if}}
+					</div>
+					</div>
+
+					<div style= "display: inline-block; float:right;">
+						<label for="threshold">Rubbish Threshold</label>
+						{{#if threshold}}
+					<input type="number" name="threshold" class="form-control" value="{{threshold}}" min="0" required>
+						{{else}}
+						<input type="number" name="threshold" class="form-control" value="{{threshold}}" min="0" required>
+						{{/if}}
+					<div style= "display: inline-block; float:right;">
+						<label for="threshold">Crowd Threshold</label>
+						{{#if crowdThreshold}}
+					<input type="number" name="crowdthreshold" class="form-control" value="{{crowdThreshold}}" min="0" required>
+					{{else}}
+					<input type="number" name="crowdthreshold" class="form-control" value="{{crowdthreshold}}" min="0" required>
+					
+
+					{{/if}}
+					</div>
+					
+				
+					
 				</div>
-				{{#if binID}}
+				<div class="form-group">
+					{{#if binID}}
 							<td>
-								<a href="/bin/updateinformation/{{dataValues.userId}}"><button class="btn btn-info" style="float: right;" >Submit</button></a>
-								<!--> disable button if ip address is invalid<-->
+								<a href="/bin/updateinformation/{{binID}}"><button class="btn btn-info" style="float: right;" >Submit</button></a>
 							</td>
 							{{else}}
 							<td>
-								<a href="/bin/addBin"></a><button type="button" class="btn btn-success" >Submit</button>
+								<a href="/bin/addBin"><button  class="btn btn-success" >Submit</button></a>
 							</td>
 							{{/if}}
+					
+				</div>
+				
 			</form>
 		</div>
 	</div>

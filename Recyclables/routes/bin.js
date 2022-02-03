@@ -79,7 +79,7 @@ router.post('/addBin', (req, res) => {
     let threshold = 50
     let remarks = req.body.remarks
     let crowdThreshold = req.body.crowdthreshold;
-    let crowd = 0;
+    let crowdFill = 0;
 
 
     Bin.findOne({
@@ -112,7 +112,7 @@ router.post('/addBin', (req, res) => {
                         threshold,
                         remarks,
                         crowdThreshold,
-                        crowdFill: 0
+                        crowdFill
                     }).then(bin => {
                         res.redirect('/bin/binManagement'); // Goes back to main user management page
                     })
@@ -269,60 +269,65 @@ router.get('/updateinformation/:id', async function(req, res) {
             res.redirect('/dashboard/main')
         } else if (checkValidatorUser == "supervisor") {
             Bin.findOne({ where: { bin_id: req.params.id } })
-                .then(bin => {
-                    var binData = bin
-                    console.log(binData)
-                    binID = bin.id
-                    Camera = req.body.camera
 
-                    ipaddress = bin.camera_ipaddress;
-                    ipaddress = ipaddress.split('https://').pop();
-                    ipaddress = ipaddress.split(":")[0];
-                    location = req.body.location
-                    lvl = req.body.level
-                    threshold = req.body.threshold
-                    remark = req.body.remarks
-                    console.log(bin.camera_ipaddress)
-                    res.render('bin/addBins', {
-                        "binData": bin,
-                        binID,
-                        Camera: ipaddress,
-                        location: bin.location_description,
-                        lvl: bin.floor_level,
-                        threshold: bin.threshold,
-                        remark: bin.remarks
-                    })
+            .then(bin => {
+                var binData = bin
+                console.log(binData)
+                binID = bin.bin_id
+                Camera = req.body.camera
+                ipaddress = bin.camera_ipaddress;
+                ipaddress = ipaddress.split('https://').pop();
+                ipaddress = ipaddress.split(":")[0];
+                location = req.body.location
+                lvl = req.body.level
+                threshold = req.body.threshold
+                remark = req.body.remarks
+                crowdThreshold = req.body.crowdthreshold;
+                console.log(bin.camera_ipaddress)
+                res.render('bin/addBins', {
+                    "binData": bin,
+                    binID,
+                    Camera: ipaddress,
+                    location: bin.location_description,
+                    lvl: bin.floor_level,
+                    threshold: bin.threshold,
+                    remark: bin.remarks,
+                    crowdThreshold: bin.crowdThreshold,
+
                 })
+            })
         }
     }
 })
 
-router.post("/updatetraffic", async (req, res)=>{
+router.post("/updatetraffic", async(req, res) => {
     console.log("call")
-    if(req.body["id"] == undefined) return res.json({"err": "true", "msg": "Invalid format"} );
+    if (req.body["id"] == undefined) return res.json({ "err": "true", "msg": "Invalid format" });
     let binId = req.body["id"];
     let targetBin = await Bin.findOne({
         where: {
             bin_id: binId
         }
     })
-    if(targetBin == null) return res.json({"err": "true", "msg": "Invalid ID"} );
-    if(req.body["add"]){
-        try{
-            await Bin.update({crowdFill: targetBin.crowdFill + parseInt(req.body["add"])}, {where: {bin_id: binId}})
-            return res.json({"err": "false"})
-        }catch(e){
-            return res.json({"err": "true", "msg": "Invalid value"} );
+    if (targetBin == null) return res.json({ "err": "true", "msg": "Invalid ID" });
+    if (req.body["add"]) {
+        try {
+            await Bin.update({ crowdFill: targetBin.crowdFill + parseInt(req.body["add"]) }, { where: { bin_id: binId } })
+            return res.json({ "err": "false" })
+        } catch (e) {
+            return res.json({ "err": "true", "msg": "Invalid value" });
         }
 
-    }else if(req.body["set"]){
-        try{
-            await Bin.update({crowdFill: parseInt(req.body["set"])}, {where: {bin_id: binId}})
-            return res.json({"err": "false"})
-        }catch(e){
-            return res.json({"err": "true", "msg": "Invalid value"} );
+    } else if (req.body["set"]) {
+        try {
+            await Bin.update({ crowdFill: parseInt(req.body["set"]) }, { where: { bin_id: binId } })
+            return res.json({ "err": "false" })
+        } catch (e) {
+            return res.json({ "err": "true", "msg": "Invalid value" });
         }
-    }else return res.json({"err": "true", "msg": "Invalid format"} );
+    } else return res.json({ "err": "true", "msg": "Invalid format" });
+})
+
 router.post('/updateinformation/:id', async function(req, res) {
     let regError = []; // Initialise error array
     let camera_ipaddress = req.body.camera
@@ -344,6 +349,7 @@ router.post('/updateinformation/:id', async function(req, res) {
     let current_metal = 0;
     let threshold = req.body.threshold
     let remarks = req.body.remarks
+    let crowdThreshold = req.body.crowdthreshold;
 
 
     Bin.findOne({
@@ -358,7 +364,8 @@ router.post('/updateinformation/:id', async function(req, res) {
                     location_description,
                     floor_level,
                     threshold,
-                    remarks
+                    remarks,
+                    crowdThreshold
                 });
             } else {
                 // To insert a record into the User table
@@ -372,7 +379,8 @@ router.post('/updateinformation/:id', async function(req, res) {
                         current_plastic,
                         current_metal,
                         threshold,
-                        remarks
+                        remarks,
+                        crowdThreshold
                     }, {
                         where: {
                             bin_id: req.params.id

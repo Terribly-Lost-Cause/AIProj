@@ -1,3 +1,4 @@
+from matplotlib.pyplot import close
 import serial
 import serial.tools.list_ports as list_ports
 import requests
@@ -17,7 +18,7 @@ from sqlalchemy import null
 
 TIMER = int(1)
 cap = cv2.VideoCapture(0)
-address = "https://192.168.1.95:8080//video"
+address = "https://10.121.192.147:8080//video"
 cap.open(address)
 frame_width = int( cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height =int( cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
@@ -67,61 +68,72 @@ def main(file, bin_id):
     servodelimiter = " "
     material = " "
     ser_micro.write(servodelimiter.encode('utf-8') + material.encode('utf-8'))
-    try:
-        url = "http://127.0.0.1:8080/predictRecyclableClass"
-        files = {'file': open(file, 'rb')}
 
-        response  = requests.post(url, files=files, timeout=1)
-            
-        if (response.status_code == 200):
-            prediction = response.json()
-            print("file: ", file, "prediction: ",prediction)
-            material = prediction["result"][0]["name"]
-            
-            retrievecursor = mydb.cursor()
-            retrievesql = "SELECT * FROM bins WHERE bin_id = %s"
-            retrieveval = (bin_id)
-            retrievecursor.execute(retrievesql, (retrieveval,))
-            myresult = retrievecursor.fetchall()
+    status = ""
+    material = ""
 
-            current_plastic = 0
-            current_metal = 0
-            overall_plastic = 0
-            overall_metal = 0
-            for x in myresult:
-                current_plastic = x[7]
-                current_metal = x[8]
-                overall_plastic = x[5]
-                overall_metal = x[6]
-            if (material == "plastic"):
-                current_plastic = current_plastic + 1
-                overall_plastic = overall_plastic+1
-                updatecursor = mydb.cursor()
-                updatesql = "UPDATE bins SET current_plastic = %s, overall_plastic = %s WHERE bin_id = %s"
-                updateval = (current_plastic, overall_plastic , bin_id)
-                updatecursor.execute(updatesql, updateval)
-                mydb.commit()
-            elif (material == "metal"):
-                current_metal = current_metal + 1
-                overall_metal = overall_metal+1
-                updatecursor = mydb.cursor()
-                updatesql = "UPDATE bins SET current_metal = %s, overall_metal = %s WHERE bin_id = %s"
-                updateval = (current_metal, overall_metal ,bin_id)
-                updatecursor.execute(updatesql, updateval)
-                mydb.commit()
-            
-            #shutil.move(file, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4()))
-            ser_micro.write(servodelimiter.encode('utf-8') + material.encode('utf-8'))
-            ser_micro.close()
-            return "success", material
-        else:
-            print("Error")
-            ser_micro.close()
-            return "error",null
-    except ReadTimeout:
-            print("Timeout, try again")
-            ser_micro.close()
-            return "error",null
+
+    while status == "":
+        try:
+            url = "http://127.0.0.1:8080/predictRecyclableClass"
+            files = {'file': open(file, 'rb')}
+
+            response  = requests.post(url, files=files, timeout=1)
+                
+            if (response.status_code == 200):
+                prediction = response.json()
+                print("file: ", file, "prediction: ",prediction)
+                material = prediction["result"][0]["name"]
+                
+                retrievecursor = mydb.cursor()
+                retrievesql = "SELECT * FROM bins WHERE bin_id = %s"
+                retrieveval = (bin_id)
+                retrievecursor.execute(retrievesql, (retrieveval,))
+                myresult = retrievecursor.fetchall()
+
+                current_plastic = 0
+                current_metal = 0
+                overall_plastic = 0
+                overall_metal = 0
+                for x in myresult:
+                    current_plastic = x[7]
+                    current_metal = x[8]
+                    overall_plastic = x[5]
+                    overall_metal = x[6]
+                if (material == "plastic"):
+                    current_plastic = current_plastic + 1
+                    overall_plastic = overall_plastic+1
+                    updatecursor = mydb.cursor()
+                    updatesql = "UPDATE bins SET current_plastic = %s, overall_plastic = %s WHERE bin_id = %s"
+                    updateval = (current_plastic, overall_plastic , bin_id)
+                    updatecursor.execute(updatesql, updateval)
+                    mydb.commit()
+                elif (material == "metal"):
+                    current_metal = current_metal + 1
+                    overall_metal = overall_metal+1
+                    updatecursor = mydb.cursor()
+                    updatesql = "UPDATE bins SET current_metal = %s, overall_metal = %s WHERE bin_id = %s"
+                    updateval = (current_metal, overall_metal ,bin_id)
+                    updatecursor.execute(updatesql, updateval)
+                    mydb.commit()
+                
+                #shutil.move(file, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4()))
+                ser_micro.write(servodelimiter.encode('utf-8') + material.encode('utf-8'))
+                
+                status = True
+                status = "success"
+                material = material
+                
+            else:
+                print("Error")
+                close(file)
+        except ReadTimeout:
+                print("Timeout, try again")
+                close(file)
+
+    close(file)
+    ser_micro.close()
+    return status, material
 
 def takeSS(cap, TIMER, trial):     
     # Read and display each frame
@@ -173,9 +185,8 @@ while cap.isOpened():
             filename, img = takeSS(cap, TIMER, trial)
             status = "error"
             material = ""
-            
-            while status == "error":
-                status,material = main(filename,bin_id)
+            status,material = main(filename,bin_id)
+            time.sleep(1)
             shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
 
             frame1 = img
