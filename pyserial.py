@@ -18,7 +18,7 @@ from sqlalchemy import null
 
 TIMER = int(1)
 cap = cv2.VideoCapture(0)
-address = "https://10.121.192.147:8080//video"
+address = "https://192.168.1.95:8080//video"
 cap.open(address)
 frame_width = int( cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height =int( cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
@@ -123,7 +123,7 @@ def main(file, bin_id):
                 status = True
                 status = "success"
                 material = material
-                
+                close(file)
             else:
                 print("Error")
                 close(file)
@@ -185,13 +185,17 @@ while cap.isOpened():
             filename, img = takeSS(cap, TIMER, trial)
             status = "error"
             material = ""
-            status,material = main(filename,bin_id)
-            time.sleep(1)
-            shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
+            try:
+                status,material = main(filename,bin_id)
+                time.sleep(1)
+                shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
 
-            frame1 = img
-            frame2 = img
-            break
+                frame1 = img
+                frame2 = img
+                break
+            except:
+                print("*Dabs with tears*")
+                continue
         pass
     
     
