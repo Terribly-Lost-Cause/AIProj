@@ -78,6 +78,10 @@ router.post('/addBin', (req, res) => {
     let current_metal = 0;
     let threshold = 50
     let remarks = req.body.remarks
+    let crowdThreshold = req.body.crowdthreshold;
+    let crowd = 0;
+
+
     Bin.findOne({
             where: {
                 location_description: location_description,
@@ -106,7 +110,9 @@ router.post('/addBin', (req, res) => {
                         current_plastic,
                         current_metal,
                         threshold,
-                        remarks
+                        remarks,
+                        crowdThreshold,
+                        crowdFill: 0
                     }).then(bin => {
                         res.redirect('/bin/binManagement'); // Goes back to main user management page
                     })
@@ -291,6 +297,32 @@ router.get('/updateinformation/:id', async function(req, res) {
     }
 })
 
+router.post("/updatetraffic", async (req, res)=>{
+    console.log("call")
+    if(req.body["id"] == undefined) return res.json({"err": "true", "msg": "Invalid format"} );
+    let binId = req.body["id"];
+    let targetBin = await Bin.findOne({
+        where: {
+            bin_id: binId
+        }
+    })
+    if(targetBin == null) return res.json({"err": "true", "msg": "Invalid ID"} );
+    if(req.body["add"]){
+        try{
+            await Bin.update({crowdFill: targetBin.crowdFill + parseInt(req.body["add"])}, {where: {bin_id: binId}})
+            return res.json({"err": "false"})
+        }catch(e){
+            return res.json({"err": "true", "msg": "Invalid value"} );
+        }
+
+    }else if(req.body["set"]){
+        try{
+            await Bin.update({crowdFill: parseInt(req.body["set"])}, {where: {bin_id: binId}})
+            return res.json({"err": "false"})
+        }catch(e){
+            return res.json({"err": "true", "msg": "Invalid value"} );
+        }
+    }else return res.json({"err": "true", "msg": "Invalid format"} );
 router.post('/updateinformation/:id', async function(req, res) {
     let regError = []; // Initialise error array
     let camera_ipaddress = req.body.camera
@@ -353,4 +385,4 @@ router.post('/updateinformation/:id', async function(req, res) {
             }
         })
 })
-module.exports = router
+module.exports = router;

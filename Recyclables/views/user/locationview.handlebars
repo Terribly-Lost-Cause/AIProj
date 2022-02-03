@@ -165,6 +165,7 @@ var state = 0;
 var detectionSensitivity = 10;
 setInterval(increaseProgress, 100)
 var video = document.querySelector("#videoCamera");
+var currentView = null;
 $("#progressNextScreenshot").attr("aria-valuemax", maxScreenshotMs)
 $("#progressNextScreenshot").attr("aria-valuenow", 0)
 $("#spanDetectSensitivity").text("Detection sensitivity: " + detectionSensitivity + "%")
@@ -175,17 +176,14 @@ let s = new URLSearchParams(window.location.search);
 if(s.has("loc")){
     let stop = false;
     for(let i in viewList){
-        console.log(viewList[i].bin_id + "---" + s.get("loc"))
         if(viewList[i].bin_id == s.get("loc")){
             switchView(i);
             stop = true;
-            console.log(i)
             break;
         }
     }
     if(stop==false)switchView(0)
 }else switchView(0);
-console.log(viewList)
 function loadViewList(activeView){
 
     $("#divViewList").html("");
@@ -238,7 +236,7 @@ function increaseProgress(){
 }
 
 function switchView(view){
-    console.log("set view to " + view)
+    currentView = view;
     loadViewList(view)
     var randomVids = [
         "/video/1.mp4",
@@ -318,6 +316,22 @@ function takepicture() {
             setTimeout(()=>{
                 state=0
             }, 1000)
+
+            $.ajax({
+                url: '/bin/updatetraffic',
+                type: 'post',
+                data: {
+                    id: viewList[currentView].bin_id,
+                    add: count 
+
+                },
+                success: function(response){
+                    console.log("success")
+                },
+                error: (res)=>{
+                    console.log("err");
+                }
+            });
         },
         error: (res)=>{
             console.log(res);

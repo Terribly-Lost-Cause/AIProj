@@ -218,7 +218,7 @@ figure {
       <div class="row">
         {{#each alertlist}}
             <div class="col-sm-4">
-              <div class="well" id="main">
+              <div class="well" id="main" data-id="{{dataValues.bin_id}}">
                 <span>
                 <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
                 <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;">Clear Bin</button></a></span>
@@ -247,7 +247,7 @@ figure {
       <div class="row">
       {{#each dangerlist}}
           <div class="col-sm-4">
-            <div class="well" id="main">
+            <div class="well" id="main" data-id="{{dataValues.bin_id}}">
               <span>
               <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
               <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;">Clear Bin</button></a></span>
@@ -276,7 +276,7 @@ figure {
 <div class="row">
       {{#each activelist}}
           <div class="col-sm-4">
-            <div class="well" id="main">
+            <div class="well" id="main" data-id="{{dataValues.bin_id}}">
               <span>
               <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
               <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;">Clear Bin</button></a></span>
@@ -305,7 +305,7 @@ figure {
 <div class="row">
       {{#each inactivelist}}
           <div class="col-sm-4">
-            <div class="well" id="main">
+            <div class="well" id="main" data-id="{{dataValues.bin_id}}">
               <span>
               <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
               <button type="button" class="btn btn-success" style="display: inline-block; float:right;">Success</button></span>

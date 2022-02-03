@@ -100,12 +100,12 @@ input {
 					</div>
 
 					<div style= "display: inline-block; float:right;">
-						<label for="threshold">Threshold</label>
-						{{#if threshold}}
-						<input type="number" name="threshold" class="form-control" value="900" min="0" required>
-						{{else}}
-					<input type="number" name="threshold" class="form-control" value="{{threshold}}" min="0" required>
-					{{/if}}
+						<label for="threshold">Rubbish Threshold</label>
+					<input type="number" name="threshold" class="form-control" value="" min="0" required>
+
+					<div style= "display: inline-block; float:right;">
+						<label for="threshold">Crowd Threshold</label>
+					<input type="number" name="crowdthreshold" class="form-control" value="" min="0" required>
 					</div>
 					
 				
