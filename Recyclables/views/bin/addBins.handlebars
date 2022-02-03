@@ -39,18 +39,28 @@ input {
   top: 10px; 
   z-index: 9; 
 }
+.loader {
+  border: 5px solid #f3f3f3; /* Light grey */
+  border-top: 5px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 
 <div class="row" style = "margin-top: 3%;">
 	<div class="col-md-6 mx-auto">
 		<div class="card card-body">
-			<div id="error">
-
-    				</div>
+			
 			{{#if regError}}
 			<div class="alert alert-danger" style="text-align: center;">
 			<ol>
-			<p>Failure to create an account</p>
 
 			{{#each regError}}
 				<li>{{this}}</li>
@@ -66,6 +76,7 @@ input {
 					<br>
 					<div class="input-box">
   					<input name="camera" maxlength="15" value = "{{Camera}}" />
+
   					<span id="urlStart">https://</span>
 					<span id="urlEnd">:8080//video</span>
 					</div>
@@ -111,26 +122,15 @@ input {
 				</div>
 				{{#if binID}}
 							<td>
-								<button class="btn btn-info" style="float: right;" onerror="this.onerror=null; this.src='/img/video-error.png'" onclick="error()">Submit</button>
+								<a href="/bin/updateinformation/{{dataValues.userId}}"><button class="btn btn-info" style="float: right;" >Submit</button></a>
+								<!--> disable button if ip address is invalid<-->
 							</td>
 							{{else}}
 							<td>
-								<button type="button" class="btn btn-success" onclick="error()">Submit</button>
+								<a href="/bin/addBin"></a><button type="button" class="btn btn-success" >Submit</button>
 							</td>
 							{{/if}}
 			</form>
 		</div>
 	</div>
 </div>
-
-<script>
-	function error(){
-		var ipaddress = document.getElementsByName('camera')[0].value
-		document.getElementById("error").innerHTML= "<img id='currentPhoto' style='visibility: hidden;' src='https://" + ipaddress + ":8080//video' onerror='this.onerror=anothererror();'>"
-
-	}
-
-	function anothererror(){
-		alert("ipaddress")
-	}
-</script>
