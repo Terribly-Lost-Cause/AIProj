@@ -142,6 +142,7 @@
         <span id="spanDetectCount"></span>
         <span id="spanDetectSensitivity"></span>
         <span id="spanAverage"></span>
+        <span id="spanCrowdLevel"></span>
         <div id="divData"></div>
         <canvas id="chartPeopleCount" width="800" height="450"></canvas>
         <canvas id="chartAveragePercentage" width="800" height="450"></canvas>
@@ -160,7 +161,7 @@
 
 <script>
 
-var maxScreenshotMs = 3000;
+var maxScreenshotMs = 10000;
 var state = 0;
 var detectionSensitivity = 10;
 setInterval(increaseProgress, 100)
@@ -256,14 +257,17 @@ function switchView(view){
             });
         }
     }
-    $("#img2").attr('src', "");
-}
+    updateCrowdLevel()
+    $("#img2").attr('src', "");}
 function getRndInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1) ) + min;
 }
 $("#btnTakeSS").on("click", (btn)=>{
     takepicture()
 })
+function updateCrowdLevel(){
+    $("#spanCrowdLevel").text(`Crowd Level: ${viewList[currentView].crowdFill}/${viewList[currentView].crowdThreshold} (${parseInt(viewList[currentView].crowdFill/viewList[currentView].crowdThreshold)*100}%)`)
+}
 
 function takepicture() {
     state = 1;
@@ -327,6 +331,8 @@ function takepicture() {
                 },
                 success: function(response){
                     console.log("success")
+                    viewList[currentView].crowdFill += parseInt(count);
+                    updateCrowdLevel();
                 },
                 error: (res)=>{
                     console.log("err");
