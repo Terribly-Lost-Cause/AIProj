@@ -423,14 +423,6 @@ figure {
       document.getElementById(metal_p_child).innerHTML = "Metal " + metal_value + "%"
   }
 
-
-
-
-
-
-
-
-
   var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   var date = new Date();
@@ -489,4 +481,92 @@ $(window).on("load", function() {
     $('#body').show();
     $('#file').hide();
 });
+
+window.setInterval(function () {
+  var date = new Date();
+  var day = days[date.getDay()];
+  var dates = date.getDate();
+  var month = months[date.getMonth()];
+  var year = date.getFullYear();
+  var hr = date.getHours();
+  var min = date.getMinutes();
+  if (min < 10) {
+      min = "0" + min;
+  }
+  var ampm = "am";
+  if( hr >= 12 ) {
+      if (hr == 12) {
+        ampm = "pm"
+      }
+      else{
+        hr -= 12;
+        ampm = "pm";
+      }
+      
+  }
+  var x = document.getElementById("datetime");
+  x.innerText = day + ", " + dates + " " + month + " " + year + " " + hr + ":" + min + ampm ;
+  var allmain = document.querySelectorAll("[id='main']");
+  for (var i = 0, len = allmain.length ; i < len; i++) {
+      const plastic_child = allmain[i].children[6].id;
+      const plastic_p_child = allmain[i].children[5].id;
+      const plastic_array = plastic_child.split("_");
+      const plastic_p_array = plastic_p_child.split("_");
+      const metal_child = allmain[i].children[10].id;
+      const metal_p_child = allmain[i].children[9].id;
+      const metal_array = metal_child.split("_");
+      const metal_p_array = metal_p_child.split("_");
+
+      id = plastic_array[0]
+      $.ajax({
+        type: "GET",
+        url: '/dashboard/getbin/' + id,
+    }).done(function (data) {
+        bin = data;
+
+        if (bin["newplastic_level"] > 100){
+          bin["newplastic_level"] = 100
+        }
+        else if (bin["newplastic_level"] == 0){
+          bin["newplastic_level"] = 1
+        }
+
+        var plastic_level = null;
+        if (bin["newplastic_level"] < 50){
+          plastic_level = "Green"
+        }
+        else if (bin["newplastic_level"] >= 50 && bin["newplastic_level"] < 75){
+          plastic_level = "Tomato"
+        }
+        else if (bin["newplastic_level"] >= 75){
+          plastic_level = "Red"
+        }
+        document.getElementById(plastic_child).style.width = bin["newplastic_level"] + "%"
+        document.getElementById(plastic_child).style.backgroundColor = plastic_level
+        document.getElementById(plastic_p_child).innerHTML = "Plastic " + bin["newplastic_level"] + "%"
+
+
+        if (bin["newmetal_level"] > 100){
+          bin["newmetal_level"] = 100
+        }
+        else if (bin["newmetal_level"] == 0){
+          bin["newmetal_level"] = 1
+        }
+
+        var metal_level = null;
+        if (bin["newmetal_level"] < 50){
+          metal_level = "Green"
+        }
+        else if (bin["newmetal_level"] >= 50 && bin["newmetal_level"] < 75){
+          metal_level = "Tomato"
+        }
+        else if (bin["newmetal_level"] >= 75){
+          metal_level = "Red"
+        }
+        document.getElementById(metal_child).style.width = bin["newmetal_level"] + "%"
+        document.getElementById(metal_child).style.backgroundColor = metal_level
+        document.getElementById(metal_p_child).innerHTML = "Metal " + bin["newmetal_level"] + "%"
+    });
+  }
+}, 30000);
 </script>
