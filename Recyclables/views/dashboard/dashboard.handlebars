@@ -209,17 +209,20 @@ figure {
   }
 
   #myProgress {
-  width: 100%;
+  width: 50%;
   background-color: #ddd;
+  margin-top: 20%;
+  margin-left: 25%;
 }
 
 #file {
-  height: 30px;
+  height: 20px;
   background-color: #04AA6D;
 }
 </style>
 
   <div id="myProgress">
+    <h2 style="text-align: center;">Loading the dashboard...</h2>
   <progress id="file" value="100" max="100" style="width: 0px"> 32% </progress>
 </div>
   <div id = "body" style = "margin-left: 3.5%; margin-right: 3.5%; margin-top: 3%; display:none;">
@@ -478,8 +481,10 @@ function calculate(){
 }
 
 $(window).on("load", function() {
+    document.getElementById("myProgress").style.removeProperty('margin-top');
+    document.getElementById("myProgress").style.removeProperty('margin-left');
     $('#body').show();
-    $('#file').hide();
+    $('#myProgress').hide();
 });
 
 window.setInterval(function () {
