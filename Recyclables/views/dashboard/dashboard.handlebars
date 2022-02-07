@@ -513,6 +513,12 @@ window.setInterval(function () {
   var x = document.getElementById("datetime");
   x.innerText = day + ", " + dates + " " + month + " " + year + " " + hr + ":" + min + ampm ;
   var allmain = document.querySelectorAll("[id='main']");
+
+  var inactivecurrentcount = {{inactivelist.length}};
+  var activecurrentcount = {{activelist.length}};
+  var dangercurrentcount = {{dangerlist.length}};
+  var alertcurrentcount = {{alertlist.length}}
+
   for (var i = 0, len = allmain.length ; i < len; i++) {
       const plastic_child = allmain[i].children[6].id;
       const plastic_p_child = allmain[i].children[5].id;
@@ -535,7 +541,36 @@ window.setInterval(function () {
           parentelement = element[0].parentElement
           parentelement.remove()
 
-          if (status == )
+          if (bin['status'] == 0){
+            inactivecurrentcount = inactivecurrentcount - 1
+            document.getElementById('inactiveheader').innerHTML = "Inactive: " + inactivecurrentcount
+          }
+          else if (bin['status'] == 1){
+            activecurrentcount = activecurrentcount - 1
+            document.getElementById('activeheader').innerHTML = "Active: " + activecurrentcount
+          }
+          else if (bin['status'] == 2){
+            dangercurrentcount = dangercurrentcount - 1
+            document.getElementById('dangerheader').innerHTML = "Danger: " + dangercurrentcount
+          }
+          else if(bin['status'] == 3){
+            alertcurrentcount = alertcurrentcount - 1
+            document.getElementById('alertheader').innerHTML = "Alert: " + alertcurrentcount
+          }
+
+          if (newupdatedstatus == "Inactive") {
+              inactivecurrentcount = inactivecurrentcount + 1
+              document.getElementById('inactiveheader').innerHTML = "Inactive: " + inactivecurrentcount
+          } else if (newupdatedstatus == "Active") {
+              activecurrentcount = activecurrentcount + 1
+              document.getElementById('activeheader').innerHTML = "Active: " + activecurrentcount
+          } else if (newupdatedstatus == "Danger") {
+              dangercurrentcount = dangercurrentcount + 1
+              document.getElementById('dangerheader').innerHTML = "Danger: " + dangercurrentcount
+          } else if (newupdatedstatus == "Alert") {
+              alertcurrentcount = alertcurrentcount + 1
+              document.getElementById('alertheader').innerHTML = "Alert: " + alertcurrentcount
+          }
         }
 
         counter += 1
