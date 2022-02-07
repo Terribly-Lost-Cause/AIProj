@@ -174,63 +174,67 @@ router.get('/getbin/:id', async function(req, res) {
 
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
         Bin.findOne({ where: { bin_id: req.params.id } }) //find all recyclables bins available
-        .then(bin => {
-            if (bin) { //
+            .then(bin => {
+                if (bin) { //
 
-                let status = bin.status
-                let curPlastic = bin.current_plastic
-                let curMetal = bin.current_metal
-                let threshold = bin.threshold
+                    let status = bin.status
+                    let curPlastic = bin.current_plastic
+                    let curMetal = bin.current_metal
+                    let threshold = bin.threshold
 
-                let newplastic_level = curPlastic / threshold * 100
-                let newmetal_level = curMetal / threshold * 100
+                    let newplastic_level = curPlastic / threshold * 100
+                    let newmetal_level = curMetal / threshold * 100
 
-                if (status != 0) {
+                    if (status != 0) {
 
-                    let level_update = null;
-                    if (newplastic_level > newmetal_level) {
-                        level_update = newplastic_level
-                    } else {
-                        level_update = newmetal_level
-                    }
-
-                    let newupdatedstatus = 0
-                    if (level_update < 50) {
-                        newupdatedstatus = 1
-                    } else if ((level_update >= 50 && level_update < 75)) {
-                        newupdatedstatus = 2
-                    } else if ((level_update >= 75)) {
-                        newupdatedstatus = 3
-                    }
-                    Bin.update({
-                        status: newupdatedstatus
-                    }, {
-                        where: {
-                            bin_id: req.params.id
+                        let level_update = null;
+                        if (newplastic_level > newmetal_level) {
+                            level_update = newplastic_level
+                        } else {
+                            level_update = newmetal_level
                         }
-                    })
-                    .then( bin1 => {
-                        if (newupdatedstatus == 0) {
-                            newupdatedstatus = "Inactive"
-                            inactivelist.push(binlist[i])
-                        } else if (newupdatedstatus == 1) {
-                            newupdatedstatus = "Active"
-                        } else if (newupdatedstatus == 2) {
-                            newupdatedstatus = "Danger"
-                        } else if (newupdatedstatus == 3) {
-                            newupdatedstatus = "Alert"
+
+                        let newupdatedstatus = 0
+                        if (level_update < 50) {
+                            newupdatedstatus = 1
+                        } else if ((level_update >= 50 && level_update < 75)) {
+                            newupdatedstatus = 2
+                        } else if ((level_update >= 75)) {
+                            newupdatedstatus = 3
                         }
-                    })
 
-                    
-                    res.send({ newplastic_level: newplastic_level, newmetal_level: newmetal_level, newupdatedstatus, newupdatedstatus });
+                        let tochange = false
+                        if (status == newupdatedstatus) {
+                            tochange = true
+                        }
+                        Bin.update({
+                                status: newupdatedstatus
+                            }, {
+                                where: {
+                                    bin_id: req.params.id
+                                }
+                            })
+                            .then(bin1 => {
+                                if (newupdatedstatus == 0) {
+                                    newupdatedstatus = "Inactive"
+                                    inactivelist.push(binlist[i])
+                                } else if (newupdatedstatus == 1) {
+                                    newupdatedstatus = "Active"
+                                } else if (newupdatedstatus == 2) {
+                                    newupdatedstatus = "Danger"
+                                } else if (newupdatedstatus == 3) {
+                                    newupdatedstatus = "Alert"
+                                }
+                            })
 
-            }
-        }
-        })
+                        res.send({ newplastic_level: newplastic_level, newmetal_level: newmetal_level, newupdatedstatus: newupdatedstatus, tochange: tochange });
 
-        
-}
+                    }
+                }
+            })
+
+
+    }
 })
 
 module.exports = router

@@ -17,8 +17,6 @@
 </style>
 
 <div style = "margin-left: 5%; margin-right: 5%; margin-top: 3%; width: 90%;">
-
-    {{#if bin}}
     <a href="/bin/addBin"><button class="btn btn-primary">Add new bin locations</button></a>
     <table>
     <tr>
@@ -28,6 +26,8 @@
         <th>Status</th>
         <th>Actions</th>
     </tr>
+    {{#if bin}}
+    
     {{#each bin}}
     <tr>
         <td>{{dataValues.floor_level}}</td>
@@ -48,6 +48,10 @@
     </tr>
     {{/each}}
     </table>
-
+    {{else}}
+    <tr>
+        <td colspan="5"><h2 style="text-align: center;">No bins found. Please add new bins</h2></td>
+    </tr>
     {{/if}}
+    
 </div>

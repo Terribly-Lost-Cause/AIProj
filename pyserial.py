@@ -1,4 +1,5 @@
 from matplotlib.pyplot import close
+from nbformat import convert
 import serial
 import serial.tools.list_ports as list_ports
 import requests
@@ -13,12 +14,13 @@ import mysql.connector
 #from sqlalchemy import over
 import shutil
 import uuid
+import os
 
 from sqlalchemy import null
 
 TIMER = int(1)
 cap = cv2.VideoCapture(0)
-address = "https://192.168.1.95:8080//video"
+address = "https://172.27.188.254:8080//video"
 cap.open(address)
 frame_width = int( cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height =int( cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
@@ -71,6 +73,7 @@ def main(file, bin_id):
 
     status = ""
     material = ""
+    score = ""
 
 
     while status == "":
@@ -82,8 +85,11 @@ def main(file, bin_id):
                 
             if (response.status_code == 200):
                 prediction = response.json()
-                print("file: ", file, "prediction: ",prediction)
+                result = prediction.items()
+                for key, value in result:
+                    score = value[0].items()
                 material = prediction["result"][0]["name"]
+                score = prediction["result"][0]["score"]
                 
                 retrievecursor = mydb.cursor()
                 retrievesql = "SELECT * FROM bins WHERE bin_id = %s"
@@ -123,17 +129,21 @@ def main(file, bin_id):
                 status = True
                 status = "success"
                 material = material
+                score = score
+                close(file)
                 close(file)
             else:
                 print("Error")
                 close(file)
+                close(file)
         except ReadTimeout:
                 print("Timeout, try again")
+                close(file)
                 close(file)
 
     close(file)
     ser_micro.close()
-    return status, material
+    return status, material, score
 
 def takeSS(cap, TIMER, trial):     
     # Read and display each frame
@@ -179,22 +189,28 @@ while cap.isOpened():
     contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         if cv2.contourArea(contour) < 3:
-            print("error "+str(trial))
             trial+=1
             image = cv2.resize(frame1, (1280,720))
             filename, img = takeSS(cap, TIMER, trial)
             status = "error"
             material = ""
             try:
-                status,material = main(filename,bin_id)
+                status,material,score = main(filename,bin_id)
                 time.sleep(1)
-                shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
+
+                print(float(score))
+                if (material == "metal" and float(score) > 0.3):
+                    shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
+                elif (material == "plastic"  and float(score) < 0.7):
+                    shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
+                else:
+                    os.remove(filename)
 
                 frame1 = img
                 frame2 = img
                 break
-            except:
-                print("*Dabs with tears*")
+            except Exception as e:
+                print(e)
                 continue
         pass
     

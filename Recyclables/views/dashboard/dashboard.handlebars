@@ -385,7 +385,7 @@ figure {
         plastic_level = "Green"
       }
       else if (plastic_value >= 50 && plastic_value < 75){
-        plastic_level = "Tomato"
+        plastic_level = "Orange"
       }
       else if (plastic_value >= 75){
         plastic_level = "Red"
@@ -487,6 +487,7 @@ $(window).on("load", function() {
     $('#myProgress').hide();
 });
 
+counter = 0
 window.setInterval(function () {
   var date = new Date();
   var day = days[date.getDay()];
@@ -529,6 +530,17 @@ window.setInterval(function () {
     }).done(function (data) {
         bin = data;
 
+        
+        console.log(bin['tochange'])
+        if (bin['tochange'] == false && counter >= 1){
+          console.log("yeee")
+          element = $("div[data-id='" + id + "']");
+          console.log(element)
+          element.prev('col-sm-4').remove();
+        }
+
+        counter += 1
+
         if (bin["newplastic_level"] > 100){
           bin["newplastic_level"] = 100
         }
@@ -541,7 +553,7 @@ window.setInterval(function () {
           plastic_level = "Green"
         }
         else if (bin["newplastic_level"] >= 50 && bin["newplastic_level"] < 75){
-          plastic_level = "Tomato"
+          plastic_level = "Orange"
         }
         else if (bin["newplastic_level"] >= 75){
           plastic_level = "Red"
@@ -563,7 +575,7 @@ window.setInterval(function () {
           metal_level = "Green"
         }
         else if (bin["newmetal_level"] >= 50 && bin["newmetal_level"] < 75){
-          metal_level = "Tomato"
+          metal_level = "Orange"
         }
         else if (bin["newmetal_level"] >= 75){
           metal_level = "Red"
