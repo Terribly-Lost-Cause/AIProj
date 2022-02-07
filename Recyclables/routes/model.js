@@ -20,36 +20,38 @@ router.get('/main', async function(req, res) {
     } else if (checkValidatorSession == "true") {
 
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
-        
+
         if (checkValidatorUser == "cleaner") {
             res.redirect('/dashboard/main')
         } else if (checkValidatorUser == "supervisor") {
 
             const dir_path = path.join(__dirname, '../public/img');
-            var plasticlist = [];
-            var metallist = [];
+            var list = [];
+            //var metallist = [];
 
-            fs.readdir(dir_path, function (err, files) {
+            fs.readdir(dir_path, function(err, files) {
                 //handling error
                 if (err) {
                     return console.log('Unable to find or open the directory: ' + err);
-                } 
+                }
                 //Print the array of images at one go
                 for (var i = 0; i < files.length; i++) {
-                    console.log(files[i])
-                    if (files[i].includes("plastic")){
-                        plasticlist.push(files[i])
+                    if (files[i].includes("microbit")) {
+                        console.log(files[i])
+                        var arry = files[i].split("_")
+                        var name = arry[0]
+                        list.push(files[i])
+                        console.log(">>>>>>>>", list)
                     }
-                    else if (files[i].includes("metal")){
-                        metallist.push(files[i])
-                    }
+
+
+
                 }
             });
 
             res.render('model/modelManagement', { //render page
                 type: "supervisor",
-                plasticlist: plasticlist,
-                metallist: metallist
+                list: list
             })
         }
     }

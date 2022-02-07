@@ -138,39 +138,27 @@ label img {
   box-shadow: 0 0 5px #333;
   z-index: -1;
 }
+
+.container {
+  display: flex;
+}
+.container.space-around {
+  justify-content: space-around;
+}
 </style>
 <body>
 
 <form id="regForm">
   <!-- One "tab" for each step in the form: -->
-  <div class="tab"><h3 style="text-align: center;">Choose items that are plastic</h3>
-  <ul>
-    {{#each plasticlist}}
-    <li><input checked="true" type="checkbox" id="{{this}}" />
-      <label for="{{this}}"><img src="/img/{{this}}" /></label>
-    </li>
-    {{/each}}
+  <div class="tab"><h3 style="text-align: center;">Categorize the items for AI training</h3>
+  <ul id="list">
+    <div  class="container space-around">
+    <button type="button" class = "btn btn-primary">Change to plastic</button>
+    <button type="button" class = "btn btn-secondary">Change to metal</button>
+    <button type="button" class = "btn btn-danger">Delete images</button>
+    </div>
+    <br>
   </ul>
-  </div>
-  <div class="tab"><h3 style="text-align: center;">Choose items that are metal</h3>
-    <ul>
-    {{#each metallist}}
-    <li><input checked="true" type="checkbox" id="{{this}}" />
-      <label for="{{this}}"><img src="/img/{{this}}" /></label>
-    </li>
-    {{/each}}
-  </ul>
-  </div>
-  <div class="tab"><h3 style="text-align: center;">Confirm changes to be made</h3>
-    <h3 style="text-align: center;">Plastic Images</h3>
-    <ul id="confirm_plastic">
-
-    </ul>
-
-    <h3 style="text-align: center;">Metal Images</h3>
-    <ul id="confirm_metal">
-
-    </ul>
   </div>
   <div style="overflow:auto;">
     <div style="float:right;">
@@ -181,42 +169,25 @@ label img {
   <!-- Circles which indicates the steps of the form: -->
   <div style="text-align:center;margin-top:40px;">
     <span class="step"></span>
-    <span class="step"></span>
-    <span class="step"></span>
   </div>
 </form>
 
 <script>
+  var list = '{{list}}'
+  var listarray = list.split(",")
 
-var plasticlist = '{{plasticlist}}'
-var metallist = '{{metallist}}'
-
-var plasticarray = plasticlist.split(",")
-var metalarray = metallist.split(",")
+  for (let i = 0; i < listarray.length; i++){
+    var imgfile = listarray[i]
+    var type = listarray[i].split("_")[0]
+    document.getElementById("list").innerHTML += "<li><figure><input type='checkbox' id='" + imgfile + "' /><label for='" + imgfile + "'><img src='/img/" + imgfile + "' /></label><figcaption style='text-align:center;'>" + type + "</figcaption></figure></li>"
+  }
+  
+</script>
+<script>
 var currentTab = 0; // Current tab is set to be the first tab (0)
 showTab(currentTab); // Display the current tab
 
 function showTab(n) {
-  
-  if (n == 2){
-    document.getElementById("confirm_plastic").innerHTML = "";
-    document.getElementById("confirm_metal").innerHTML = "";
-    console.log(plasticarray)
-    console.log(metalarray)
-    for (let i = 0; i < plasticarray.length; i++){
-      if (document.getElementById(plasticarray[i]).checked == true){
-        
-        document.getElementById("confirm_plastic").innerHTML += "<li><input checked='true' type='checkbox' id='" + plasticarray[i] + "' /><label for='" + plasticarray[i] + "'><img src='/img/" + plasticarray[i] + "' /></label></li>"
-      }
-    }
-
-    for (let y = 0; y < metalarray.length; y++){
-      if (document.getElementById(metalarray[y]).checked == true){
-        document.getElementById("confirm_metal").innerHTML += "<li><input checked='true' type='checkbox' id='" + metalarray[y] + "' /><label for='" + metalarray[y] + "'><img src='/img/" + metalarray[y] + "' /></label></li>"
-      }
-    }
-
-  }
 
   // This function will display the specified tab of the form...
   var x = document.getElementsByClassName("tab");

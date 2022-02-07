@@ -200,8 +200,10 @@ while cap.isOpened():
 
                 print(float(score))
                 if (material == "metal" and float(score) > 0.3):
+                    material = "Metal"
                     shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
                 elif (material == "plastic"  and float(score) < 0.7):
+                    material = "Plastic"
                     shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
                 else:
                     os.remove(filename)
