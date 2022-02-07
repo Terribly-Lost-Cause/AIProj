@@ -181,6 +181,9 @@ router.get('/getbin/:id', async function(req, res) {
                     let curPlastic = bin.current_plastic
                     let curMetal = bin.current_metal
                     let threshold = bin.threshold
+                    let description = bin.location_description
+                    let level = bin.floor_level
+                    let ipcamera = bin.camera_ipaddress
 
                     let newplastic_level = curPlastic / threshold * 100
                     let newmetal_level = curMetal / threshold * 100
@@ -217,7 +220,6 @@ router.get('/getbin/:id', async function(req, res) {
                             .then(bin1 => {
                                 if (newupdatedstatus == 0) {
                                     newupdatedstatus = "Inactive"
-                                    inactivelist.push(binlist[i])
                                 } else if (newupdatedstatus == 1) {
                                     newupdatedstatus = "Active"
                                 } else if (newupdatedstatus == 2) {
@@ -227,7 +229,7 @@ router.get('/getbin/:id', async function(req, res) {
                                 }
                             })
 
-                        res.send({ newplastic_level: newplastic_level, newmetal_level: newmetal_level, newupdatedstatus: newupdatedstatus, tochange: tochange, status: status });
+                        res.send({ newplastic_level: newplastic_level, newmetal_level: newmetal_level, newupdatedstatus: newupdatedstatus, tochange: tochange, status: status, description: description, level: level, ipcamera: ipcamera });
 
                     }
                 }
