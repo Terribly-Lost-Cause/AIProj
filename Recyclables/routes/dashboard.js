@@ -227,7 +227,7 @@ router.get('/getbin/:id', async function(req, res) {
                                 }
                             })
 
-                        res.send({ newplastic_level: newplastic_level, newmetal_level: newmetal_level, newupdatedstatus: newupdatedstatus, tochange: tochange });
+                        res.send({ newplastic_level: newplastic_level, newmetal_level: newmetal_level, newupdatedstatus: newupdatedstatus, tochange: tochange, status: status });
 
                     }
                 }
