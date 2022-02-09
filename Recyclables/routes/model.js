@@ -9,7 +9,11 @@ const Session = require('../models/session');
 const Bin = require('../models/bin');
 const path = require('path');
 const fs = require('fs');
-
+const { request } = require('https');
+const { google } = require('googleapis');
+const SCOPES = ['https://www.googleapis.com/auth/drive']
+const TOKEN_PATH = 'token.json';
+let auth;
 router.get('/main', async function(req, res) {
     const title = 'Overall Dashboard';
 
@@ -37,18 +41,11 @@ router.get('/main', async function(req, res) {
                 //Print the array of images at one go
                 for (var i = 0; i < files.length; i++) {
                     if (files[i].includes("microbit")) {
-                        console.log(files[i])
-                        var arry = files[i].split("_")
-                        var name = arry[0]
                         list.push(files[i])
-                        console.log(">>>>>>>>", list)
                     }
-
-
-
                 }
             });
-
+            console.log(list)
             res.render('model/modelManagement', { //render page
                 type: "supervisor",
                 list: list
@@ -57,6 +54,69 @@ router.get('/main', async function(req, res) {
     }
 });
 
+router.post('/changeMaterials', async function(req, res) {
+    var array = JSON.parse(req.body.id);
+    for (var i = 0; i < array.length; i++) {
+        var currentname = array[i]
+        var currentarray = currentname.split("_")
+        if (currentarray[0] == "Plastic") {
+            currentarray[0] = "Metal"
+        } else if (currentarray[0] == "Metal") {
+            currentarray[0] = "Plastic"
+        }
+        var newname = currentarray.join("_")
+        const dir_path = path.join(__dirname, '../public/img/');
+        console.log(dir_path)
+        fs.rename(dir_path + currentname, dir_path + newname, (error) => {
+            if (error) {
+                console.log(error)
+            }
+        })
+    }
+})
 
+router.post('/deleteImage', async function(req, res) {
+    var array = JSON.parse(req.body.id);
+    for (var i = 0; i < array.length; i++) {
+        var currentname = array[i]
+        const dir_path = path.join(__dirname, '../public/img/');
+        console.log(dir_path)
+        fs.unlink(dir_path + currentname, (error) => {
+            if (error) {
+                console.log(error)
+            }
+        })
+    }
+})
+
+router.get('/confirmModelling', async function(req, res) {
+    console.log("yayye")
+    const dir_path = path.join(__dirname, '../public/img/');
+    console.log(dir_path)
+    fs.readdir(dir_path, function(err, files) {
+        //handling error
+        if (err) {
+            return console.log('Unable to find or open the directory: ' + err);
+        }
+        //Print the array of images at one go
+        for (var i = 0; i < files.length; i++) {
+            if (files[i].includes("microbit") && files[i].includes("Metal")) {
+                fs.rename(dir_path + files[i], dir_path + "/Metal/" + files[i], (error) => {
+                    if (error) {
+                        console.log(error)
+                    }
+                })
+            } else if (files[i].includes("microbit") && files[i].includes("Plastic")) {
+                fs.rename(dir_path + files[i], dir_path + "/Plastic/" + files[i], (error) => {
+                    if (error) {
+                        console.log(error)
+                    }
+                })
+            }
+        }
+    });
+
+    res.redirect("/model/main")
+})
 
 module.exports = router

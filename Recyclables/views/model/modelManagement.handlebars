@@ -148,17 +148,20 @@ label img {
 </style>
 <body>
 
-<form id="regForm">
+<form id="regForm" action="/model/confirmModelling">
   <!-- One "tab" for each step in the form: -->
-  <div class="tab"><h3 style="text-align: center;">Categorize the items for AI training</h3>
-  <ul id="list">
-    <div  class="container space-around">
-    <button type="button" class = "btn btn-primary">Change to plastic</button>
-    <button type="button" class = "btn btn-secondary">Change to metal</button>
-    <button type="button" class = "btn btn-danger">Delete images</button>
-    </div>
-    <br>
-  </ul>
+  {{#if list.length}}
+  <div class="tab">
+    <h3 style="text-align: center;">Categorize the items for AI training</h3>
+    <ul id="list">
+      <div class="container space-around">
+      <button type="button" class = "btn btn-primary" onclick="changeMaterial()">Change Material Type</button>
+      <button type="button" class = "btn btn-danger" onclick="deleteImage()">Delete images</button>
+      </div>
+      <br>
+      
+    </ul>
+    
   </div>
   <div style="overflow:auto;">
     <div style="float:right;">
@@ -170,18 +173,61 @@ label img {
   <div style="text-align:center;margin-top:40px;">
     <span class="step"></span>
   </div>
+  {{else}}
+    <h3 style="text-align: center;">No images to be processed</h3>
+    {{/if}}
 </form>
 
 <script>
   var list = '{{list}}'
   var listarray = list.split(",")
-
+  if (listarray.length > 1){
   for (let i = 0; i < listarray.length; i++){
     var imgfile = listarray[i]
     var type = listarray[i].split("_")[0]
-    document.getElementById("list").innerHTML += "<li><figure><input type='checkbox' id='" + imgfile + "' /><label for='" + imgfile + "'><img src='/img/" + imgfile + "' /></label><figcaption style='text-align:center;'>" + type + "</figcaption></figure></li>"
+    document.getElementById("list").innerHTML += "<li><figure><input class='checkboxes' name='checkbox[]' type='checkbox' id='" + imgfile + "' /><label for='" + imgfile + "'><img src='/img/" + imgfile + "' /></label><figcaption style='text-align:center;'>" + type + "</figcaption></figure></li>"
+  }
   }
   
+  function changeMaterial(){
+    var checkbox = document.getElementsByClassName("checkboxes")
+    checkbox = document.querySelectorAll('input[class=checkboxes]:checked');
+    var vals = []
+
+    for(var i = 0; i < checkbox.length; i++){
+        vals.push(checkbox[i].id)
+    }
+    console.log(vals)
+    $.ajax({
+              url: '/model/changeMaterials',
+              type: 'POST',
+              data: {
+                'id': JSON.stringify(vals)
+              }
+          });
+          location.reload();
+    }
+
+    function deleteImage(){
+    var checkbox = document.getElementsByClassName("checkboxes")
+    checkbox = document.querySelectorAll('input[class=checkboxes]:checked');
+    var vals = []
+
+    for(var i = 0; i < checkbox.length; i++){
+        vals.push(checkbox[i].id)
+    }
+    console.log(vals)
+    $.ajax({
+              url: '/model/deleteImage',
+              type: 'POST',
+              data: {
+                'id': JSON.stringify(vals)
+              }
+          });
+          location.reload();
+    }
+    
+
 </script>
 <script>
 var currentTab = 0; // Current tab is set to be the first tab (0)

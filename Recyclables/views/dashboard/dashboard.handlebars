@@ -232,7 +232,7 @@ figure {
     </div>
 <button class="accordion"><h3 style="margin: 0" id="alertheader">Alert: {{alertlist.length}}</h3></button>
     <div class="panel">
-      <div class="row">
+      <div class="row" id="alertrow">
         {{#each alertlist}}
             <div class="col-sm-4">
               <div class="well" id="main" data-id="{{dataValues.bin_id}}">
@@ -262,7 +262,7 @@ figure {
 
     <button class="accordion"><h3 style="margin: 0" id="dangerheader">Danger: {{dangerlist.length}}</h3></button>
     <div class="panel">
-      <div class="row">
+      <div class="row" id="dangerrow">
       {{#each dangerlist}}
           <div class="col-sm-4">
             <div class="well" id="main" data-id="{{dataValues.bin_id}}">
@@ -291,7 +291,7 @@ figure {
 
     <button class="accordion"><h3 style="margin: 0" id="activeheader">Active: {{activelist.length}}</h3></button>
     <div class="panel">
-<div class="row">
+<div class="row" id="activerow">
       {{#each activelist}}
           <div class="col-sm-4">
             <div class="well" id="main" data-id="{{dataValues.bin_id}}">
@@ -320,7 +320,7 @@ figure {
 
     <button class="accordion"><h3 style="margin: 0" id="inactiveheader">Inactive: {{inactivelist.length}}</h3></button>
     <div class="panel">
-<div class="row">
+<div class="row" id="inactiverow">
       {{#each inactivelist}}
           <div class="col-sm-4">
             <div class="well" id="main" data-id="{{dataValues.bin_id}}">
@@ -540,6 +540,7 @@ window.setInterval(function () {
           element = $("div[data-id='" + plastic_array[0] + "']");
           parentelement = element[0].parentElement
           parentelement.remove()
+          console.log(parentelement.innerHTML)
 
           if (bin['status'] == 0){
             inactivecurrentcount = inactivecurrentcount - 1
@@ -558,18 +559,22 @@ window.setInterval(function () {
             document.getElementById('alertheader').innerHTML = "Alert: " + alertcurrentcount
           }
 
-          if (newupdatedstatus == "Inactive") {
+          if (bin['newupdatedstatus'] == 0) {
               inactivecurrentcount = inactivecurrentcount + 1
               document.getElementById('inactiveheader').innerHTML = "Inactive: " + inactivecurrentcount
-          } else if (newupdatedstatus == "Active") {
+              document.getElementById('inactiverow').innerHTML += parentelement.outerHTML
+          } else if (bin['newupdatedstatus'] == 1) {
               activecurrentcount = activecurrentcount + 1
               document.getElementById('activeheader').innerHTML = "Active: " + activecurrentcount
-          } else if (newupdatedstatus == "Danger") {
+              document.getElementById('activerow').innerHTML += parentelement.outerHTML
+          } else if (bin['newupdatedstatus'] == 2) {
               dangercurrentcount = dangercurrentcount + 1
               document.getElementById('dangerheader').innerHTML = "Danger: " + dangercurrentcount
-          } else if (newupdatedstatus == "Alert") {
+              document.getElementById('dangerrow').innerHTML += parentelement.outerHTML
+          } else if (bin['newupdatedstatus'] == 3) {
               alertcurrentcount = alertcurrentcount + 1
               document.getElementById('alertheader').innerHTML = "Alert: " + alertcurrentcount
+              document.getElementById('alertrow').innerHTML += parentelement.outerHTML
           }
         }
 
