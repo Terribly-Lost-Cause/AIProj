@@ -166,15 +166,9 @@ router.get('/updatelevel/:id', async function(req, res) {
                             bin_id: req.params.id // FInd the user who is being changed
                         }
                     })
-                    res.render(`
-                    <script>
-                    location.reload()</script>
-                `);
+                    res.send({stat : "weh"});
                 } else {
-                    res.send(`
-                    <script>alert("failure")
-                    </script>
-                `);
+                    res.send({stat : "wew"});
                 }
 
             })
