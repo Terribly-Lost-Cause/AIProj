@@ -65,11 +65,12 @@
         margin-bottom: 20px;
         width: 100%;
     }
-    #divControls button{
+    #divControls button, #divControls a{
         width: 100%;
         border: solid blue; 
+        margin: 10px 0; 
     }
-    #divControls button:hover{
+    #divControls button:hover, #divControls a:hover{
         width: 100%;
         background-color: #e5e5e5;
     }
@@ -129,7 +130,7 @@
     <div class="cdivMain" id="divCamera">
         
         <h2>Video Footage</h2>
-        <video autoplay loop id="videoCamera" > </video>
+        <video autoplay loop muted id="videoCamera" > </video>
         <div class="progress" id="progressNextScreenshotBody">
             <div class="progress-bar" id="progressNextScreenshot" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
           </div>
@@ -149,6 +150,7 @@
 
         <div id="divControls">
             <button id="btnTakeSS" class="btn">Process current screenshot</button>
+            <a id="btnViewCrowd" href="" class="btn">View crowd statistics</button>
         </div>
     </div>
 </div>
@@ -239,6 +241,7 @@ function increaseProgress(){
 function switchView(view){
     currentView = view;
     loadViewList(view)
+    $("#btnViewCrowd").attr("href", "/dashboard/viewchart?loc=" + viewList[currentView].bin_id)
     var randomVids = [
         "/video/1.mp4",
         "/video/2.mp4",
