@@ -148,33 +148,33 @@ router.get('/addBin', async function(req, res) {
 
 // Update bin levels
 router.get('/updatelevel/:id', async function(req, res) {
-
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
 
     if (checkValidatorSession == "false") {
         res.redirect('/user/login')
     } else if (checkValidatorSession == "true") {
 
-        Bin.findOne({ where: { bin_id: req.params.id } })
+        await Bin.findOne({ where: { bin_id: req.params.id } })
             .then(bin => {
                 if (bin) {
-
+                    console.log(">>>>>>>>>>>", bin)
                     Bin.update({
-                            current_plastic: 0, // Update new status and the button value
-                            current_metal: 0
-                        }, {
-                            where: {
-                                bin_id: req.params.id // FInd the user who is being changed
-                            }
-                        })
-                        .then(() => { // alert success update
-                            res.redirect('/dashboard/main')
-                        })
+                        current_plastic: 0, // Update new status and the button value
+                        current_metal: 0
+                    }, {
+                        where: {
+                            bin_id: req.params.id // FInd the user who is being changed
+                        }
+                    })
+                    res.render(`
+                    <script>
+                    location.reload()</script>
+                `);
                 } else {
                     res.send(`
-                        <script>alert("Fatal Error Occured")
-                        setTimeout(window.location = "/dashboard/main", 1000)</script>
-                    `);
+                    <script>alert("failure")
+                    </script>
+                `);
                 }
 
             })
