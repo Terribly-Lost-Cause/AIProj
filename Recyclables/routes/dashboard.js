@@ -167,13 +167,14 @@ router.get("/location", async(req, res) => {
 router.get('/getbin/:id', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+        //var message = await require("../utils/sms")("description", "level", "newupdatedstatus")
 
     if (checkValidatorSession == "false") {
         res.redirect('/user/login')
     } else if (checkValidatorSession == "true") {
 
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
-        Bin.findOne({ where: { bin_id: req.params.id } }) //find all recyclables bins available
+        await Bin.findOne({ where: { bin_id: req.params.id } }) //find all recyclables bins available
             .then(bin => {
                 if (bin) { //
 
@@ -202,13 +203,42 @@ router.get('/getbin/:id', async function(req, res) {
                             newupdatedstatus = 1
                         } else if ((level_update >= 50 && level_update < 75)) {
                             newupdatedstatus = 2
+
                         } else if ((level_update >= 75)) {
                             newupdatedstatus = 3
+
                         }
 
                         let tochange = false
                         if (status == newupdatedstatus) {
                             tochange = true
+
+                        } else {
+                            if (newupdatedstatus - status > 0) {
+
+                                const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+                                if (newupdatedstatus == 2) {
+                                    var urgency = "The bin is about to be overfilled with recyclables."
+                                }
+                                if (newupdatedstatus == 3) {
+                                    var urgency = "The bin has overfilled with recyclables and requires immediate attention!"
+                                }
+                                client.validationRequests
+                                    .create({ friendlyName: 'Smart Bin', phoneNumber: '+14158675310' })
+                                    .then(validation_request => console.log(validation_request.friendlyName))
+                                    .catch(err => console.log(err));
+
+                                client.messages
+                                    .create({
+                                        body: 'Please clear the trash at ' + description + ' level ' + level + '. ' + urgency,
+                                        from: '+17373734753',
+                                        to: '+6598209042'
+                                    })
+                                    .then(message => console.log(message.sid));
+
+
+                            }
+
                         }
                         Bin.update({
                                 status: newupdatedstatus
@@ -231,6 +261,8 @@ router.get('/getbin/:id', async function(req, res) {
 
                         res.send({ newplastic_level: newplastic_level, newmetal_level: newmetal_level, newupdatedstatus: newupdatedstatus, tochange: tochange, status: status, description: description, level: level, ipcamera: ipcamera });
 
+                    } else {
+                        res.send({ newplastic_level: 0, newmetal_level: 0, newupdatedstatus: 0, tochange: true, status: 0, description: 0, level: 0, ipcamera: 0 });
                     }
                 }
             })

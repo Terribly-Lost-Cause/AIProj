@@ -11,7 +11,7 @@ import numpy as np
 #from PIL import Image 
 import sys
 import mysql.connector
-#from sqlalchemy import over
+#from sqlalchemy import over  
 import shutil
 import uuid
 import os
@@ -20,7 +20,7 @@ from sqlalchemy import null
 
 TIMER = int(1)
 cap = cv2.VideoCapture(0)
-address = "https://172.27.188.254:8080//video"
+address = "https://192.168.129.86:8080//video"
 cap.open(address)
 frame_width = int( cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height =int( cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
@@ -198,7 +198,7 @@ while cap.isOpened():
                 status,material,score = main(filename,bin_id)
                 time.sleep(1)
 
-                print(float(score))
+                print(material + ": "+float(score))
                 if (material == "metal" and float(score) > 0.3):
                     material = "Metal"
                     shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")

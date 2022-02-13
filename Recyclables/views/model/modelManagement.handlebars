@@ -148,7 +148,7 @@ label img {
 </style>
 <body>
 
-<form id="regForm" action="/model/confirmModelling">
+<form id="regForm" action="/model/confirmModelling" method="get">
   <!-- One "tab" for each step in the form: -->
   {{#if list.length}}
   <div class="tab">
@@ -188,7 +188,7 @@ label img {
     document.getElementById("list").innerHTML += "<li><figure><input class='checkboxes' name='checkbox[]' type='checkbox' id='" + imgfile + "' /><label for='" + imgfile + "'><img src='/img/" + imgfile + "' /></label><figcaption style='text-align:center;'>" + type + "</figcaption></figure></li>"
   }
   }
-  
+ 
   function changeMaterial(){
     var checkbox = document.getElementsByClassName("checkboxes")
     checkbox = document.querySelectorAll('input[class=checkboxes]:checked');
