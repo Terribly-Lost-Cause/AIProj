@@ -133,6 +133,22 @@ router.get('/confirmModelling', async function(req, res) {
         return numarray[numarray.length - 1]
     }
 
+    
+    function GetLastPlastic() {
+        var files = fs.readdirSync(plasticdb);
+        var numarray = []
+        for (var i = 0; i < files.length; i++) {
+            var name = files[i].replace("plastic", "")
+            name = name.replace(".jpg", "")
+            name = name.replace(".jpeg", "")
+            numarray.push(Number(name))
+        }
+        numarray = numarray.sort(function(a, b) {
+            return a - b;
+        });
+        return numarray[numarray.length - 1]
+    }
+
     function deleteEverything(path) {
         fs.unlink(path, (error) => {
             if (error) {
@@ -152,10 +168,41 @@ router.get('/confirmModelling', async function(req, res) {
 
                     console.log(`Extracted to "${outputDir}" successfully`);
 
-                    var lastMetalNum = GetLastMetal()
+                    var lastMetalNum = parseInt(GetLastMetal())
                     console.log(">>>>>>>>>>>>>", lastMetalNum)
-                        // deleteEverything('AI.zip')
-                        // deleteEverything('AI')
+                    var lastPlasticNum = parseInt(GetLastPlastic())
+                    console.log(">>>>>>>>>>>>>", lastPlasticNum)
+
+                        const dir_path = path.join(__dirname, '../public/img/');
+                        fs.readdir(dir_path, function(err, files) {
+                            //handling error
+                            if (err) {
+                                return console.log('Unable to find or open the directory: ' + err);
+                            }
+                            //Print the array of images at one go
+                            for (var i = 0; i < files.length; i++) {
+                                if (files[i].includes("microbit")) {
+                                    if (files[i].includes("Metal")){
+                                        lastMetalNum += 1
+                                        fs.rename(dir_path + files[i], "AI/recyclableDataset/metal/metal" + lastMetalNum + ".jpg", (error) => {
+                                            if (error) {
+                                                console.log(error)
+                                            }
+                                        })
+                                    }
+                                    else if (files[i].includes("Plastic")){
+                                        lastPlasticNum += 1
+                                        fs.rename(dir_path + files[i], "AI/recyclableDataset/plastic/plastic" + lastPlasticNum + ".jpg", (error) => {
+                                            if (error) {
+                                                console.log(error)
+                                            }
+                                        })
+                                    }
+                                }
+                            }
+                        });
+
+
                 } catch (e) {
                     console.log(`Something went wrong. ${e}`);
                 }
