@@ -238,7 +238,7 @@ figure {
               <div class="well" id="main" data-id="{{dataValues.bin_id}}">
                 <span>
                 <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
-                <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;">Clear Bin</button></a></span>
+                <button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="re('{{dataValues.bin_id}}')">Clear Bin</button></span>
                 <p><span style="width: 80%; float:left; display: inline-block; ">Level {{dataValues.floor_level}}</span></p>
                 
                 <img width="100%" height="100%" src="{{dataValues.camera_ipaddress}}" onerror="this.onerror=calculate(); this.src='/img/video-error.png'"></img>
@@ -268,7 +268,7 @@ figure {
             <div class="well" id="main" data-id="{{dataValues.bin_id}}">
               <span>
               <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
-              <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;">Clear Bin</button></a></span>
+              <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="clearBin({{dataValues.bin_id}})">Clear Bin</button></a></span>
               <p><span style="width: 80%; float:left; display: inline-block; ">Level {{dataValues.floor_level}}</span></p>
               <img class = "liveVid"width="100%" height="100%" src="{{dataValues.camera_ipaddress}}" onerror="this.onerror=calculate(); this.src='/img/video-error.png'"></img>
               <br>
@@ -297,7 +297,10 @@ figure {
             <div class="well" id="main" data-id="{{dataValues.bin_id}}">
               <span>
               <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
-              <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;">Clear Bin</button></a></span>
+              <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="clearBin({{dataValues.bin_id}})">Clear Bin</button></a>
+              <br>
+              <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-info" style="display: inline-block; float:right;">View Crowd</button></a>
+              </span>
               <p><span style="width: 80%; float:left; display: inline-block; ">Level {{dataValues.floor_level}}</span></p>
               <img width="100%" height="100%" src="{{dataValues.camera_ipaddress}}" onerror="this.onerror=calculate(); this.src='/img/video-error.png'"></img>
               <br>
@@ -326,7 +329,8 @@ figure {
             <div class="well" id="main" data-id="{{dataValues.bin_id}}">
               <span>
               <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
-              <button type="button" class="btn btn-success" style="display: inline-block; float:right;">Success</button></span>
+              <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="clearBin({{dataValues.bin_id}})">Clear Bin</button></a>
+              </span>
               <p><span style="width: 80%; float:left; display: inline-block; ">Level {{dataValues.floor_level}}</span></p>
               <img width="100%" height="100%" src="{{dataValues.camera_ipaddress}}" onerror="this.onerror=calculate(); this.src='/img/video-error.png'"></img>
               <br>
@@ -454,22 +458,20 @@ figure {
 
 
 
-  //Hello zuhe!
-  $(".well").on("click", (e)=>{
-
-    let tgt = e.target;
-    let x=0
-
-    while(tgt.tagName != "DIV" || !$(tgt).hasClass("well")){
-      tgt = tgt.parentElement;
-      x++
-      if(x>5)break;
-    }
-
-    window.location.href = `/dashboard/location?loc=${$(tgt).data("id")}`
-  })
+  
 </script>
 <script type="text/javascript">
+
+function re(weh){
+    console.log(weh)
+    $.ajax({
+        type: "GET",
+        url: '/bin/updatelevel/' + weh,
+    }).done(function (data) {
+        console.log(data)
+    });
+  }
+
 var error = 0
 function calculate(){
   var total = {{alertlist.length}} + {{dangerlist.length}} + {{activelist.length}} + {{inactivelist.length}}
@@ -488,6 +490,8 @@ $(window).on("load", function() {
 });
 
 counter = 0
+
+
 window.setInterval(function () {
   var date = new Date();
   var day = days[date.getDay()];
@@ -514,11 +518,12 @@ window.setInterval(function () {
   x.innerText = day + ", " + dates + " " + month + " " + year + " " + hr + ":" + min + ampm ;
   var allmain = document.querySelectorAll("[id='main']");
 
-  var inactivecurrentcount = {{inactivelist.length}};
-  var activecurrentcount = {{activelist.length}};
-  var dangercurrentcount = {{dangerlist.length}};
-  var alertcurrentcount = {{alertlist.length}}
+  var inactivecurrentcount = parseInt(document.getElementById("inactiveheader").innerText.replace("Inactive: ", ""));
+  var activecurrentcount = parseInt(document.getElementById("activeheader").innerText.replace("Active: ", ""));
+  var dangercurrentcount = parseInt(document.getElementById("dangerheader").innerText.replace("Danger: ", ""));
+  var alertcurrentcount = parseInt(document.getElementById("alertheader").innerText.replace("Alert: ", ""));
 
+ 
   for (var i = 0, len = allmain.length ; i < len; i++) {
       const plastic_child = allmain[i].children[6].id;
       const plastic_p_child = allmain[i].children[5].id;
@@ -528,8 +533,9 @@ window.setInterval(function () {
       const metal_p_child = allmain[i].children[9].id;
       const metal_array = metal_child.split("_");
       const metal_p_array = metal_p_child.split("_");
-
       id = plastic_array[0]
+
+
       $.ajax({
         type: "GET",
         url: '/dashboard/getbin/' + id,
@@ -540,7 +546,7 @@ window.setInterval(function () {
           element = $("div[data-id='" + plastic_array[0] + "']");
           parentelement = element[0].parentElement
           parentelement.remove()
-          console.log(parentelement.innerHTML)
+          console.log(bin['status'])
 
           if (bin['status'] == 0){
             inactivecurrentcount = inactivecurrentcount - 1
@@ -624,5 +630,5 @@ window.setInterval(function () {
         document.getElementById(metal_p_child).innerHTML = "Metal " + bin["newmetal_level"] + "%"
     });
   }
-}, 30000);
+}, 5000);
 </script>
