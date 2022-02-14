@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const Session = require('../models/session');
 const Bin = require('../models/bin');
+const crowdRecord = require("../models/crowdRecord");
 
 router.get('/main', async function(req, res) {
     const title = 'Overall Dashboard';
@@ -159,6 +160,34 @@ router.get("/location", async(req, res) => {
     } else if (checkValidatorUser == "supervisor") {
         res.render('user/locationView', { //render page
             binlist: JSON.stringify(binlist),
+            type: "supervisor"
+        })
+    }
+})
+router.get("/viewChart", async(req, res) => {
+
+    let checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
+
+    if (checkValidatorSession == "false") return res.redirect("/user/login")
+    else if (checkValidatorSession != "true") return res.redirect("/user/login?how=did_you_get_here");
+
+    console.log("reee");
+    let crowdData = await crowdRecord.findAll();
+    console.log("rarwa");
+    let binList = await Bin.findAll();
+
+
+    let checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
+
+    if (checkValidatorUser == "cleaner") {
+        res.render('user/chart', { //render page
+            binlist: JSON.stringify(binList),
+            crowdData: JSON.stringify(crowdData)
+        })
+    } else if (checkValidatorUser == "supervisor") {
+        res.render('user/chart', { //render page
+            binlist: JSON.stringify(binList),
+            crowdData: JSON.stringify(crowdData),
             type: "supervisor"
         })
     }

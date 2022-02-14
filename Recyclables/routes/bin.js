@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const Session = require('../models/session');
 const Bin = require('../models/bin');
+const crowdRecord = require("../models/crowdRecord");
 const net = require('net');
 // Get bins routes get
 router.get('/binManagement', async function(req, res) {
@@ -295,7 +296,7 @@ router.get('/updateinformation/:id', async function(req, res) {
 })
 
 router.post("/updatetraffic", async(req, res) => {
-    console.log("call")
+    //Request validation
     if (req.body["id"] == undefined) return res.json({ "err": "true", "msg": "Invalid format" });
     let binId = req.body["id"];
     let targetBin = await Bin.findOne({
@@ -304,14 +305,28 @@ router.post("/updatetraffic", async(req, res) => {
         }
     })
     if (targetBin == null) return res.json({ "err": "true", "msg": "Invalid ID" });
+
+    //To increase traffic
     if (req.body["add"]) {
         try {
+            let today = new Date();
             await Bin.update({ crowdFill: targetBin.crowdFill + parseInt(req.body["add"]) }, { where: { bin_id: binId } })
+            await crowdRecord.create(
+                today.getHours(), 
+                today.getMinutes(),
+                today.getSeconds(),
+                today.getDate(),
+                today.getMonth(),
+                today.getFullYear(),
+                binId, 
+                parseInt(req.body["add"])
+                )
             return res.json({ "err": "false" })
         } catch (e) {
             return res.json({ "err": "true", "msg": "Invalid value" });
         }
 
+    //Reset Traffic
     } else if (req.body["set"]) {
         try {
             await Bin.update({ crowdFill: parseInt(req.body["set"]) }, { where: { bin_id: binId } })

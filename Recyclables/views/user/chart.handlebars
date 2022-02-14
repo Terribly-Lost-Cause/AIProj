@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<meta charset="UTF-8" />
+<style>
+    body{
+        overflow: hidden;
+    }
+    #title{
+        height: 6vh;
+        min-height: 6vh;
+        text-align: center;
+    }
+    #divMain{
+        display: flex;
+        overflow: hide;
+        border-top: solid black;
+    }
+    .cdivMain{
+        display: inline-block;
+        height: 90vh;
+        min-height: 90vh;
+        max-height: 90vh; 
+        padding: 20px;
+    }
+    #videoCamera{
+        height: 50%;
+        margin: auto;
+        display: block;
+    }
+    #divViewsSelector{
+        width: 20vw;
+    }
+    #divGraphs{
+        width: 80vw;
+        overflow-y: scroll;
+        padding-bottom: 50px;
+    }
+
+    #divViewList{
+        overflow-y: scroll;
+        height: 85%;
+        max-height: 85%;
+    }
+    .divViewSelectItem{
+        background-color: lightgray;
+        display: block;
+        border: solid black 1px;
+        margin: 3% 0;
+        border-radius: 5px;
+        padding: 3%; 
+    }
+    .divViewSelectItem:hover{
+        background-color: lightsteelblue;
+        cursor: pointer;
+    }
+    .divViewSelectItemActive{
+        background-color: lightgreen;
+        display: block;
+        border: solid black 1px;
+        margin: 3% 0;
+        border-radius: 5px;
+        padding: 3%; 
+    }
+    .divViewSelectItemActive:hover{
+        cursor: pointer;
+    }
+    .spanViewItemName{
+        font-weight: bold;
+        font-size: larger;
+        display: list-item;
+    }
+    .spanViewItemSource{
+        font-style: italic;
+        font-size: larger;
+        display: list-item;
+    }
+
+
+    .chartlabel{
+        text-align: center;
+        width: 100%;
+        font-size: xx-large;
+        font-weight: bold;
+        display: block;
+    }
+    .chart{
+        width: 100% !important;
+        height: 90% !important;
+    }
+    #divGraphs hr{
+        width: 100%;
+        height: 3px !important;
+        background-color: black !important;
+        opacity: 100 !important;
+    }
+    
+</style>
+
+
+<title>Trashbot Crowd Statistics</title>
+
+<h1 id="title">Trashbot Crowd Statistics</h1>
+<div id="divMain">
+    <div class="cdivMain" id="divViewsSelector">
+        <h2>View Selector</h2>
+        <div id="divViewList">
+
+        </div>
+
+    </div>
+    <div class="cdivMain" id="divGraphs">
+        <span class="chartlabel">Traffic every hour</span>
+        <canvas id="chartHourView" class="chart"></canvas>
+        <hr/>
+        <span class="chartlabel">Traffic every day of the week</span>
+        <canvas id="chartWeekView" class="chart"></canvas>
+        <hr/>
+        <span class="chartlabel">Traffic every day of the month</span>
+        <canvas id="chartMonthView" class="chart"></canvas>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!--script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script-->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+
+<script>
+var currentView = null;
+
+
+let hourViewChart = new Chart(document.getElementById("chartHourView"), {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{ 
+        data: [],
+        label: "Traffic",
+        borderColor: "#3e95cd",
+        fill: false
+      }
+    ]
+  },
+  options: {
+    title: {
+      display: true,
+      text: 'Traffic/hour'
+    }
+  }
+});
+let weekViewChart = new Chart(document.getElementById("chartWeekView"), {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{ 
+        data: [],
+        label: "Traffic",
+        borderColor: "#3e95cd",
+        fill: false
+      }
+    ]
+  },
+  options: {
+    title: {
+      display: true,
+      text: 'Traffic/Day of week'
+    }
+  }
+});
+
+let monthViewChart = new Chart(document.getElementById("chartMonthView"), {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{ 
+        data: [],
+        label: "Traffic",
+        borderColor: "#3e95cd",
+        fill: false
+      }
+    ]
+  },
+  options: {
+    title: {
+      display: true,
+      text: 'Traffic/Day of month'
+    }
+  }
+});
+let viewList = {{{binlist}}}
+let crowdData = {{{crowdData}}}
+let s = new URLSearchParams(window.location.search);
+if(s.has("loc")){
+    let stop = false;
+    for(let i in viewList){
+        if(viewList[i].bin_id == s.get("loc")){
+            switchView(i);
+            stop = true;
+            break;
+        }
+    }
+    if(stop==false)switchView(0)
+}else switchView(0);
+function loadViewList(activeView){
+
+    $("#divViewList").html("");
+    for(let view in viewList){
+        $("#divViewList").append(`
+            <div class="${activeView == view?"divViewSelectItemActive":"divViewSelectItem"}" data-viewid="${view}">
+                <span class="spanViewItemName">Level ${viewList[view].floor_level} - ${viewList[view].location_description}</span>
+                <span class="spanViewItemSource">${viewList[view].camera_ipaddress}</span>
+            </div>
+        `);
+
+    }
+    
+    $(".divViewSelectItem, .divViewSelectItem span").click((e)=>{
+        if(e.target.tagName.toLowerCase() == "span") return e.target.parentElement.click(); 
+        let tgt = $(e.target)
+        switchView(tgt.attr("data-viewid"));
+    })
+
+
+}
+function switchView(view){
+    currentView = view;
+    loadViewList(view)
+    let labels = [], data = [];
+    labels = Array.from({length: 24}, (_, i) => ((i * 1)<10)?"0"+(i*1)+":00":(i*01)+":00");
+    data = Array(24).fill(0);
+    for(let record in crowdData){
+        if (crowdData[record].binId == viewList[currentView].bin_id){
+            data[crowdData[record].hour] += crowdData[record].count;
+        }
+    }
+    for(let d in data){
+        if(isNaN(data[d])) data[d] = 0;
+    }
+    hourViewChart.data.labels = labels;
+    hourViewChart.data.datasets[0].data = data;
+    hourViewChart.update()
+
+    
+    labels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    data = Array(7).fill(0);
+    for(let record in crowdData){
+        if (crowdData[record].binId == viewList[currentView].bin_id){
+            record = crowdData[record];
+            let date = new Date(`${record.year}-${record.month}-${record.day}`);
+            data[date.getDay()] += record.count;
+            console.log(date)
+            console.log(`${record.year}-${record.month}-${record.day}`)
+        }
+    }
+    for(let d in data){
+        if(isNaN(data[d])) data[d] = 0;
+    }
+    weekViewChart.data.labels = labels;
+    weekViewChart.data.datasets[0].data = data;
+    weekViewChart.update()
+
+
+    labels = Array.from({length: 31}, (_, i) => i*1+1);
+    data = Array(31).fill(0);
+    for(let record in crowdData){
+        if (crowdData[record].binId == viewList[currentView].bin_id){
+            data[crowdData[record].day-1] += crowdData[record].count;
+        }
+    }
+    for(let d in data){
+        if(isNaN(data[d])) data[d] = 0;
+    }
+    monthViewChart.data.labels = labels;
+    monthViewChart.data.datasets[0].data = data;
+    monthViewChart.update()
+
+}
+
+</script>
