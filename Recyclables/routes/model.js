@@ -211,17 +211,46 @@ router.get('/confirmModelling', async function(req, res) {
                     // delete the AI zip folder
                     fs.rmSync("AI.zip", { recursive: true, force: true })
 
-                    // drive.files.update({
-                    //     fileId: fileId,
-                    //     resource: "recyclableDataset.zip"
-                    // }, (err, file) => {
-                    //     if (err){
-                    //         console.log(err)
-                    //     }
-                    //     else{
-                    //         console.log("ye")
-                    //     }
-                    // })
+
+                    var fileMetadata = {
+                        'name': 'recyclableDataset.zip'
+                      };
+                      var media = {
+                        mimeType: 'application/zip',
+                        body: fs.createReadStream('recyclableDataset.zip')
+                      };
+
+                      // first update it so we cna update the file
+                      drive.permissions.create({
+                        fileId: fileId,
+                        requestBody: {
+                        role: 'writer',
+                        type: 'anyone',
+                        },
+                    });
+
+                      drive.files.update({
+                        fileId: fileId,
+                        resource: fileMetadata,
+                        media: media
+                      }, (err, file) => {
+                        if (err) {
+                          // Handle error
+                          console.error(err);
+                        } else {
+                          // no error update back permission
+                            // drive.permissions.create({
+                            //     fileId: fileId,
+                            //     requestBody: {
+                            //     role: 'viewer',
+                            //     type: 'anyone',
+                            //     },
+                            // });
+
+                            fs.rmSync("recyclableDataset.zip", { recursive: true, force: true })
+
+                        }
+                      });
                     res.redirect("/model/main")
                 } catch (e) {
                     console.log(`Something went wrong. ${e}`);
