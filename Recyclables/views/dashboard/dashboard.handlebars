@@ -238,7 +238,10 @@ figure {
               <div class="well" id="main" data-id="{{dataValues.bin_id}}">
                 <span>
                 <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
-                <button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="re('{{dataValues.bin_id}}')">Clear Bin</button></span>
+                <button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="re('{{dataValues.bin_id}}')">Clear Bin</button>
+                <br>
+              <a href="/dashboard/location?loc={{dataValues.bin_id}}"><button type="button" class="btn btn-info" style="display: inline-block; float:right;">View Crowd</button></a>
+              </span>
                 <p><span style="width: 80%; float:left; display: inline-block; ">Level {{dataValues.floor_level}}</span></p>
                 
                 <img width="100%" height="100%" src="{{dataValues.camera_ipaddress}}" onerror="this.onerror=calculate(); this.src='/img/video-error.png'"></img>
@@ -268,7 +271,10 @@ figure {
             <div class="well" id="main" data-id="{{dataValues.bin_id}}">
               <span>
               <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
-              <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="clearBin({{dataValues.bin_id}})">Clear Bin</button></a></span>
+              <button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="re('{{dataValues.bin_id}}')">Clear Bin</button>
+              <br>
+              <a href="/dashboard/location?loc={{dataValues.bin_id}}"><button type="button" class="btn btn-info" style="display: inline-block; float:right;">View Crowd</button></a>
+</span>
               <p><span style="width: 80%; float:left; display: inline-block; ">Level {{dataValues.floor_level}}</span></p>
               <img class = "liveVid"width="100%" height="100%" src="{{dataValues.camera_ipaddress}}" onerror="this.onerror=calculate(); this.src='/img/video-error.png'"></img>
               <br>
@@ -297,9 +303,9 @@ figure {
             <div class="well" id="main" data-id="{{dataValues.bin_id}}">
               <span>
               <h3 style="display: inline-block;">{{dataValues.location_description}}</h3>
-              <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="clearBin({{dataValues.bin_id}})">Clear Bin</button></a>
+              <button type="button" class="btn btn-success" style="display: inline-block; float:right;" onclick="re('{{dataValues.bin_id}}')">Clear Bin</button></a>
               <br>
-              <a href="/bin/updatelevel/{{dataValues.bin_id}}"><button type="button" class="btn btn-info" style="display: inline-block; float:right;">View Crowd</button></a>
+              <a href="/dashboard/location?loc={{dataValues.bin_id}}"><button type="button" class="btn btn-info" style="display: inline-block; float:right;">View Crowd</button></a>
               </span>
               <p><span style="width: 80%; float:left; display: inline-block; ">Level {{dataValues.floor_level}}</span></p>
               <img width="100%" height="100%" src="{{dataValues.camera_ipaddress}}" onerror="this.onerror=calculate(); this.src='/img/video-error.png'"></img>
@@ -353,6 +359,21 @@ figure {
 </div>
 
 <script>
+
+ $(".btn btn-info").on("click", (e)=>{
+
+    let tgt = e.target;
+    let x=0
+
+    while(tgt.tagName != "DIV" || !$(tgt).hasClass("well")){
+      tgt = tgt.parentElement;
+      x++
+      if(x>5)break;
+    }
+
+    window.location.href = `/dashboard/location?loc=${$(tgt).data("id")}`
+  })
+
 
   var acc = document.getElementsByClassName("accordion");
   var i;
