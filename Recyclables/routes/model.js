@@ -157,10 +157,10 @@ router.get('/confirmModelling', async function(req, res) {
         })
     }
 
-    drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' }).then(res => {
-        res.data
+    await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' }).then(ress => {
+        ress.data
             .on('end', () => {
-                console.log('Done downloading file.');
+                setTimeout(() => {  console.log("Done downloading file.!"); }, 2000);
                 try {
                     const zip = new AdmZip('AI.zip');
                     const outputDir = 'AI';
@@ -173,50 +173,64 @@ router.get('/confirmModelling', async function(req, res) {
                     var lastPlasticNum = parseInt(GetLastPlastic())
                     console.log(">>>>>>>>>>>>>", lastPlasticNum)
 
-                        const dir_path = path.join(__dirname, '../public/img/');
-                        fs.readdir(dir_path, function(err, files) {
-                            //handling error
-                            if (err) {
-                                return console.log('Unable to find or open the directory: ' + err);
-                            }
-                            //Print the array of images at one go
-                            for (var i = 0; i < files.length; i++) {
-                                if (files[i].includes("microbit")) {
-                                    if (files[i].includes("Metal")){
-                                        lastMetalNum += 1
-                                        fs.rename(dir_path + files[i], "AI/recyclableDataset/metal/metal" + lastMetalNum + ".jpg", (error) => {
-                                            if (error) {
-                                                console.log(error)
-                                            }
-                                        })
+                    const dir_path = path.join(__dirname, '../public/img/');
+                    var files = fs.readdirSync(dir_path);
+                    for (var i = 0; i < files.length; i++) {
+                        if (files[i].includes("microbit")) {
+                            if (files[i].includes("Metal")){
+                                lastMetalNum += 1
+                                fs.renameSync(dir_path + files[i], "AI/recyclableDataset/metal/metal" + lastMetalNum + ".jpg", (error) => {
+                                    if (error) {
+                                        console.log(error)
+                                    }else{
+                                        console.log(files[i])
                                     }
-                                    else if (files[i].includes("Plastic")){
-                                        lastPlasticNum += 1
-                                        fs.rename(dir_path + files[i], "AI/recyclableDataset/plastic/plastic" + lastPlasticNum + ".jpg", (error) => {
-                                            if (error) {
-                                                console.log(error)
-                                            }
-                                        })
-                                    }
-                                }
+                                })
+                                
                             }
-                        });
+                            else if (files[i].includes("Plastic")){
+                                lastPlasticNum += 1
+                                fs.renameSync(dir_path + files[i], "AI/recyclableDataset/plastic/plastic" + lastPlasticNum + ".jpg", (error) => {
+                                    if (error) {
+                                        console.log(error)
+                                    }else{
+                                        console.log(files[i])
+                                    }
+                                })
+                                
+                            }
+                        }
+                    }
+                    console.log("zip")
+                    const file = new AdmZip();
+                    file.addLocalFolder('AI/recyclableDataset', 'recyclableDataset');
+                    fs.writeFileSync('recyclableDataset.zip', file.toBuffer());
 
+                    // delete the extracted AI folder
+                    fs.rmSync("AI", { recursive: true, force: true })
+                    // delete the AI zip folder
+                    fs.rmSync("AI.zip", { recursive: true, force: true })
 
+                    // drive.files.update({
+                    //     fileId: fileId,
+                    //     resource: "recyclableDataset.zip"
+                    // }, (err, file) => {
+                    //     if (err){
+                    //         console.log(err)
+                    //     }
+                    //     else{
+                    //         console.log("ye")
+                    //     }
+                    // })
+                    res.redirect("/model/main")
                 } catch (e) {
                     console.log(`Something went wrong. ${e}`);
+                    res.redirect("/model/main")
                 }
             })
             .on('error', err => {
                 console.error('Error downloading file.');
-            })
-            .on('data', d => {
-                progress += d.length;
-                if (process.stdout.isTTY) {
-                    process.stdout.clearLine();
-                    process.stdout.cursorTo(0);
-                    process.stdout.write(`Downloaded ${progress} bytes`);
-                }
+                res.redirect("/model/main")
             })
             .pipe(dest);
     });
@@ -225,33 +239,6 @@ router.get('/confirmModelling', async function(req, res) {
 
 
 
-
-    const dir_path = path.join(__dirname, '/AI/recyclableDataset');
-    console.log(dir_path)
-    fs.readdir(dir_path, function(err, files) {
-        //handling error
-        if (err) {
-            return console.log('Unable to find or open the directory: ' + err);
-        }
-        //Print the array of images at one go
-        for (var i = 0; i < files.length; i++) {
-            if (files[i].includes("microbit") && files[i].includes("Metal")) {
-                fs.rename(dir_path + files[i], dir_path + "/Metal/" + files[i], (error) => {
-                    if (error) {
-                        console.log(error)
-                    }
-                })
-            } else if (files[i].includes("microbit") && files[i].includes("Plastic")) {
-                fs.rename(dir_path + files[i], dir_path + "/Plastic/" + files[i], (error) => {
-                    if (error) {
-                        console.log(error)
-                    }
-                })
-            }
-        }
-    });
-
-    res.redirect("/model/main")
 })
 
 module.exports = router
