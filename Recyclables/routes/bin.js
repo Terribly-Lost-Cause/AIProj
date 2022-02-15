@@ -167,9 +167,9 @@ router.get('/updatelevel/:id', async function(req, res) {
                             bin_id: req.params.id // FInd the user who is being changed
                         }
                     })
-                    res.send({stat : "weh"});
+                    res.send({ stat: "weh" });
                 } else {
-                    res.send({stat : "wew"});
+                    res.send({ stat: "wew" });
                 }
 
             })
@@ -281,6 +281,7 @@ router.get('/updateinformation/:id', async function(req, res) {
                 console.log(bin.camera_ipaddress)
                 res.render('bin/addBins', {
                     "binData": bin,
+                    type: "supervisor",
                     binID,
                     Camera: ipaddress,
                     location: bin.location_description,
@@ -312,21 +313,21 @@ router.post("/updatetraffic", async(req, res) => {
             let today = new Date();
             await Bin.update({ crowdFill: targetBin.crowdFill + parseInt(req.body["add"]) }, { where: { bin_id: binId } })
             await crowdRecord.create(
-                today.getHours(), 
+                today.getHours(),
                 today.getMinutes(),
                 today.getSeconds(),
                 today.getDate(),
                 today.getMonth(),
                 today.getFullYear(),
-                binId, 
+                binId,
                 parseInt(req.body["add"])
-                )
+            )
             return res.json({ "err": "false" })
         } catch (e) {
             return res.json({ "err": "true", "msg": "Invalid value" });
         }
 
-    //Reset Traffic
+        //Reset Traffic
     } else if (req.body["set"]) {
         try {
             await Bin.update({ crowdFill: parseInt(req.body["set"]) }, { where: { bin_id: binId } })
