@@ -167,9 +167,9 @@ router.get('/updatelevel/:id', async function(req, res) {
                             bin_id: req.params.id // FInd the user who is being changed
                         }
                     })
-                    res.send({ stat: "weh" });
+                    res.send({ stat: "Bin successfully cleared" });
                 } else {
-                    res.send({ stat: "wew" });
+                    res.send({ stat: "Error" });
                 }
 
             })

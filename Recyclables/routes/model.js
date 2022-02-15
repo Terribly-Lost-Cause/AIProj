@@ -91,22 +91,15 @@ router.post('/deleteImage', async function(req, res) {
 router.get('/confirmModelling', async function(req, res) {
     console.log("yayye")
 
-    //client id
-    const CLIENT_ID = '106893340507-fmr4e7ivi9uda07hg43c6fqblkne9tpa.apps.googleusercontent.com';
-    //client secret
-    const CLIENT_SECRET = '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';
-    //redirect URL
-    const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
-    //refresh token
-    const REFRESH_TOKEN = '1//04podkUWYmi68CgYIARAAGAQSNwF-L9IrDCV14BhZ7bIaGirtobAxr34IilwZewnaKiYPKN9kzdfukoA3cplCvJD1AUEBsDl8-s0';
-    //intialize auth client
+
+
     const oauth2Client = new google.auth.OAuth2(
-        CLIENT_ID,
-        CLIENT_SECRET,
-        REDIRECT_URI
+        process.env.CLIENT_ID,
+        process.env.CLIENT_SECRET,
+        process.env.REDIRECT_URI
     );
     //setting our auth credentials
-    oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+    oauth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
     //initialize google drive
     const drive = google.drive({
         version: 'v3',
@@ -133,7 +126,7 @@ router.get('/confirmModelling', async function(req, res) {
         return numarray[numarray.length - 1]
     }
 
-    
+
     function GetLastPlastic() {
         var files = fs.readdirSync(plasticdb);
         var numarray = []
@@ -160,7 +153,7 @@ router.get('/confirmModelling', async function(req, res) {
     await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' }).then(ress => {
         ress.data
             .on('end', () => {
-                setTimeout(() => {  console.log("Done downloading file.!"); }, 2000);
+                setTimeout(() => { console.log("Done downloading file.!"); }, 2000);
                 try {
                     const zip = new AdmZip('AI.zip');
                     const outputDir = 'AI';
@@ -177,27 +170,26 @@ router.get('/confirmModelling', async function(req, res) {
                     var files = fs.readdirSync(dir_path);
                     for (var i = 0; i < files.length; i++) {
                         if (files[i].includes("microbit")) {
-                            if (files[i].includes("Metal")){
+                            if (files[i].includes("Metal")) {
                                 lastMetalNum += 1
                                 fs.renameSync(dir_path + files[i], "AI/recyclableDataset/metal/metal" + lastMetalNum + ".jpg", (error) => {
                                     if (error) {
                                         console.log(error)
-                                    }else{
+                                    } else {
                                         console.log(files[i])
                                     }
                                 })
-                                
-                            }
-                            else if (files[i].includes("Plastic")){
+
+                            } else if (files[i].includes("Plastic")) {
                                 lastPlasticNum += 1
                                 fs.renameSync(dir_path + files[i], "AI/recyclableDataset/plastic/plastic" + lastPlasticNum + ".jpg", (error) => {
                                     if (error) {
                                         console.log(error)
-                                    }else{
+                                    } else {
                                         console.log(files[i])
                                     }
                                 })
-                                
+
                             }
                         }
                     }
@@ -208,37 +200,37 @@ router.get('/confirmModelling', async function(req, res) {
 
                     // delete the extracted AI folder
                     fs.rmSync("AI", { recursive: true, force: true })
-                    // delete the AI zip folder
+                        // delete the AI zip folder
                     fs.rmSync("AI.zip", { recursive: true, force: true })
 
 
                     var fileMetadata = {
                         'name': 'recyclableDataset.zip'
-                      };
-                      var media = {
+                    };
+                    var media = {
                         mimeType: 'application/zip',
                         body: fs.createReadStream('recyclableDataset.zip')
-                      };
+                    };
 
-                      // first update it so we cna update the file
-                      drive.permissions.create({
+                    // first update it so we cna update the file
+                    drive.permissions.create({
                         fileId: fileId,
                         requestBody: {
-                        role: 'writer',
-                        type: 'anyone',
+                            role: 'writer',
+                            type: 'anyone',
                         },
                     });
 
-                      drive.files.update({
+                    drive.files.update({
                         fileId: fileId,
                         resource: fileMetadata,
                         media: media
-                      }, (err, file) => {
+                    }, (err, file) => {
                         if (err) {
-                          // Handle error
-                          console.error(err);
+                            // Handle error
+                            console.error(err);
                         } else {
-                          // no error update back permission
+                            // no error update back permission
                             // drive.permissions.create({
                             //     fileId: fileId,
                             //     requestBody: {
@@ -250,7 +242,7 @@ router.get('/confirmModelling', async function(req, res) {
                             fs.rmSync("recyclableDataset.zip", { recursive: true, force: true })
 
                         }
-                      });
+                    });
                     res.redirect("/model/main")
                 } catch (e) {
                     console.log(`Something went wrong. ${e}`);
@@ -266,7 +258,7 @@ router.get('/confirmModelling', async function(req, res) {
 
 
 
-//
+    //
 
 })
 
