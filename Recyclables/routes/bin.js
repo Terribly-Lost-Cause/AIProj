@@ -9,11 +9,12 @@ const Session = require('../models/session');
 const Bin = require('../models/bin');
 const crowdRecord = require("../models/crowdRecord");
 const net = require('net');
+
 // Get bins routes get
 router.get('/binManagement', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-
+    // Perform same validation check for session and user again
     if (checkValidatorSession == "false") {
         res.redirect('/user/login')
     } else if (checkValidatorSession == "true") {
@@ -23,7 +24,7 @@ router.get('/binManagement', async function(req, res) {
         if (checkValidatorUser == "cleaner") {
             res.redirect('/dashboard/main')
         } else if (checkValidatorUser == "supervisor") {
-            Bin.findAll({}).then(bin => { //find all users
+            Bin.findAll({}).then(bin => { //find all bins
                     if (bin != undefined) { //pagination
                         var binlist = bin;
 
@@ -62,9 +63,12 @@ router.get('/binManagement', async function(req, res) {
 // Add bin routes for get and post
 router.post('/addBin', (req, res) => {
     let regError = []; // Initialise error array
+    // Get all the values from the form
+    // Initialise all other predefined values
     let bin_id = uuid.uuid();
     let camera_ipaddress = req.body.camera
     console.log("]]]]]]]]]]]]]]]", camera_ipaddress)
+    // IP address validator
     if (net.isIPv4(camera_ipaddress) != 0) {
         camera_ipaddress = "https://" + camera_ipaddress + ":8080//video";
     } else {
@@ -82,7 +86,6 @@ router.post('/addBin', (req, res) => {
     let crowdThreshold = req.body.crowdthreshold;
     let crowdFill = 0;
 
-
     Bin.findOne({
             where: {
                 location_description: location_description,
@@ -91,15 +94,16 @@ router.post('/addBin', (req, res) => {
         })
         .then(bin => {
             if (bin)
-                regError.push("A bin has already been placed there. Please use another location.") // user has been used, error
-            if (regError.length > 0) { // see if there is error, exclude first one
+                // If bin exist already then throw an error
+                regError.push("A bin has already been placed there. Please use another location.")
+            if (regError.length > 0) { // see if there is error, exclude first one. If have direct to bin page
                 res.render('bin/addBins', {
                     layout: 'main.handlebars',
                     regError: regError,
                     type: "supervisor"
                 });
             } else {
-                // To insert a record into the User table
+                // To insert a record into the Bin table
                 Bin.create({
                         bin_id,
                         camera_ipaddress,
@@ -115,7 +119,7 @@ router.post('/addBin', (req, res) => {
                         crowdThreshold,
                         crowdFill
                     }).then(bin => {
-                        res.redirect('/bin/binManagement'); // Goes back to main user management page
+                        res.redirect('/bin/binManagement'); // Goes back to main bin management page
                     })
                     .catch(err => console.log(err))
             }
@@ -123,12 +127,12 @@ router.post('/addBin', (req, res) => {
 });
 
 
-// Add user get and post
+// Add bin get and post
 router.get('/addBin', async function(req, res) {
     const title = 'Add Bin';
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-
+    // Perform same validation check for session and user again
     if (checkValidatorSession == "false") {
         res.redirect('/user/login')
     } else if (checkValidatorSession == "true") {
@@ -141,16 +145,16 @@ router.get('/addBin', async function(req, res) {
             res.render('bin/addBins', {
                     type: "supervisor",
                     title: title
-                }) // renders views/user/adduser.handlebars (webpage to key in new user info)
+                }) // renders views/user/addBins.handlebars (webpage to key in new bin info)
         }
     }
 });
 
 
-// Update bin levels
+// Update bin levels to 0
 router.get('/updatelevel/:id', async function(req, res) {
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-
+    // Perform same validation check for session and user again
     if (checkValidatorSession == "false") {
         res.redirect('/user/login')
     } else if (checkValidatorSession == "true") {
@@ -158,13 +162,12 @@ router.get('/updatelevel/:id', async function(req, res) {
         await Bin.findOne({ where: { bin_id: req.params.id } })
             .then(bin => {
                 if (bin) {
-                    console.log(">>>>>>>>>>>", bin)
                     Bin.update({
-                        current_plastic: 0, // Update new status and the button value
+                        current_plastic: 0, // Update new status to clear the bins
                         current_metal: 0
                     }, {
                         where: {
-                            bin_id: req.params.id // FInd the user who is being changed
+                            bin_id: req.params.id // FInd the bin who is being changed
                         }
                     })
                     res.send({ stat: "Bin successfully cleared" });
@@ -181,7 +184,7 @@ router.get('/updatelevel/:id', async function(req, res) {
 router.get('/updatestatus/:id', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-
+    // Perform same validation check for session and user again
     if (checkValidatorSession == "false") {
         res.redirect('/user/login')
     } else if (checkValidatorSession == "true") {
@@ -194,16 +197,18 @@ router.get('/updatestatus/:id', async function(req, res) {
             Bin.findOne({ where: { bin_id: req.params.id } })
                 .then(bin => {
                     if (bin) {
-                        var stat = bin.status; // Initialise the user status from db
+                        var stat = bin.status; 
                         if (stat == 0) {
-
+                            // Get all the current bin information
                             let curPlastic = bin.current_plastic
                             let curMetal = bin.current_metal
                             let threshold = bin.threshold
 
+                            // Calculate the metal and plastic
                             let plastic_level = curPlastic / threshold * 100
                             let metal_level = curMetal / threshold * 100
 
+                            // Take the level whichever is higer to update status in database
                             let level_update = null;
                             if (plastic_level > metal_level) {
                                 level_update = plastic_level
@@ -219,15 +224,14 @@ router.get('/updatestatus/:id', async function(req, res) {
                                 var newstat = 3
                             }
                         } else {
-                            var newstat = 0; // If button click make status active
+                            var newstat = 0;
                         }
 
                         Bin.update({
-                                status: newstat, // Update new status and the button value
-                                //action: stt
+                                status: newstat, // Update new status
                             }, {
                                 where: {
-                                    bin_id: req.params.id // FInd the user who is being changed
+                                    bin_id: req.params.id // FInd the bin who is being changed
                                 }
                             })
                             .then(() => { // alert success update
@@ -248,12 +252,12 @@ router.get('/updatestatus/:id', async function(req, res) {
     }
 })
 
-
+// Route to update information of the bin
 router.get('/updateinformation/:id', async function(req, res) {
 
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-
+    // Perform same validation check for session and user again
     if (checkValidatorSession == "false") {
         res.redirect('/user/login')
     } else if (checkValidatorSession == "true") {
@@ -267,7 +271,8 @@ router.get('/updateinformation/:id', async function(req, res) {
 
             .then(bin => {
                 var binData = bin
-                console.log(binData)
+
+                // get all the bin information from the database
                 binID = bin.bin_id
                 Camera = req.body.camera
                 ipaddress = bin.camera_ipaddress;
@@ -278,7 +283,8 @@ router.get('/updateinformation/:id', async function(req, res) {
                 threshold = req.body.threshold
                 remark = req.body.remarks
                 crowdThreshold = req.body.crowdthreshold;
-                console.log(bin.camera_ipaddress)
+
+                // Send all data over to handlebars to prefill the fields
                 res.render('bin/addBins', {
                     "binData": bin,
                     type: "supervisor",
@@ -338,18 +344,19 @@ router.post("/updatetraffic", async(req, res) => {
     } else return res.json({ "err": "true", "msg": "Invalid format" });
 })
 
+// Route to receive information from update bin for
 router.post('/updateinformation/:id', async function(req, res) {
     let regError = []; // Initialise error array
     let camera_ipaddress = req.body.camera
-    console.log("\\\\\\\\\\\\\\", net.isIPv4(camera_ipaddress))
+    // Validate ip address
     if (net.isIPv4(camera_ipaddress) == false) {
         regError.push("Invalid IP Address")
     } else {
         camera_ipaddress = "https://" + camera_ipaddress + ":8080//video";
     }
     var binId = req.params.id
-    console.log("/////////////", regError)
 
+    // Get all the fields from the update bin form
     let location_description = req.body.location;
     let floor_level = req.body.level;
     let status = 1;
@@ -378,7 +385,7 @@ router.post('/updateinformation/:id', async function(req, res) {
                     crowdThreshold
                 });
             } else {
-                // To insert a record into the User table
+                // To update a record into bin table
                 Bin.update({
                         camera_ipaddress,
                         location_description,
