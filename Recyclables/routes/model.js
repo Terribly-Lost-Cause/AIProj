@@ -52,7 +52,7 @@ router.get('/main', async function(req, res) {
             });
 
             // render the model management page
-            res.render('model/modelManagement', { 
+            res.render('model/modelManagement', {
                 type: "supervisor",
                 list: list
             })
@@ -60,12 +60,12 @@ router.get('/main', async function(req, res) {
     }
 });
 
-// The route that will help change the meterial type of the image
+// The route that will help change the material type of the image
 router.post('/changeMaterials', async function(req, res) {
     var array = JSON.parse(req.body.id);
     for (var i = 0; i < array.length; i++) {
-        // FIrst get the file name in the array to change
-        // Then since the name consist of type, microbit and id, split them up
+        // First get the file name in the array to change
+        // Then since the name consists of type, microbit and id, split them up
         // Plastic swap to metal and vice versa
         // Join the result back together
         var currentname = array[i]
@@ -130,7 +130,7 @@ router.get('/confirmModelling', async function(req, res) {
     const metaldb = 'AI/recyclableDataset/metal'
     const plasticdb = 'AI/recyclableDataset/plastic'
 
-    // FUnction to get the last number metal from the downloaded dataset from drive
+    // Function to get the number for last image of metal from the downloaded dataset from drive
     function GetLastMetal() {
         var files = fs.readdirSync(metaldb);
         var numarray = []
@@ -146,7 +146,7 @@ router.get('/confirmModelling', async function(req, res) {
         return numarray[numarray.length - 1]
     }
 
-    // FUnction to get the last number plastic from the downloaded dataset from drive
+    // Function to get the number for the last image of plastic from the downloaded dataset from drive
     function GetLastPlastic() {
         var files = fs.readdirSync(plasticdb);
         var numarray = []
@@ -177,19 +177,19 @@ router.get('/confirmModelling', async function(req, res) {
 
                     console.log(`Extracted to "${outputDir}" successfully`);
 
-                    // Here is to get the last number for both metal and plastic for naming purpose later
+                    // Here is to get the last number for both metal and plastic for naming purpose later and to check if number is correct
                     var lastMetalNum = parseInt(GetLastMetal())
                     console.log(">>>>>>>>>>>>>", lastMetalNum)
                     var lastPlasticNum = parseInt(GetLastPlastic())
                     console.log(">>>>>>>>>>>>>", lastPlasticNum)
 
-                    // INitialize the folder path with all the images and read the files
+                    // Initialize the folder path with all the images and read the files
                     const dir_path = path.join(__dirname, '../public/img/');
                     var files = fs.readdirSync(dir_path);
                     for (var i = 0; i < files.length; i++) {
                         if (files[i].includes("microbit")) {
                             if (files[i].includes("Metal")) {
-                                // If the image is classified metal and has microbit
+                                // If the image is classified as metal and has microbit
                                 // Rename the file and move from the public/img folder to the extracted dataset with the correct number
                                 lastMetalNum += 1
                                 fs.renameSync(dir_path + files[i], "AI/recyclableDataset/metal/metal" + lastMetalNum + ".jpg", (error) => {
@@ -225,7 +225,7 @@ router.get('/confirmModelling', async function(req, res) {
 
                     // delete the extracted AI folder
                     fs.rmSync("AI", { recursive: true, force: true })
-                    // delete the AI zip folder
+                        // delete the AI zip folder
                     fs.rmSync("AI.zip", { recursive: true, force: true })
 
 
@@ -248,7 +248,7 @@ router.get('/confirmModelling', async function(req, res) {
                             // Handle error
                             console.error(err);
                         } else {
-                            // WHen there is no error means uplodaed success.
+                            // When there is no error means uplodaed success.
                             // Delete that folder from local project
                             fs.rmSync("recyclableDataset.zip", { recursive: true, force: true })
 

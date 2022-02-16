@@ -264,7 +264,7 @@ router.get('/getbin/:id', async function(req, res) {
                             // If the change in status in positive aka active -> alert/danger
                             if (newupdatedstatus - status > 0) {
 
-                                // Initialise the sms provider which is twilo
+                                // Initialise the sms provider which is twilio
                                 const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
                                 if (newupdatedstatus == 2) {
                                     var urgency = "The bin is about to be overfilled with recyclables."

@@ -25,12 +25,11 @@ router.get('/login', async function(req, res) {
 
     // If session valid then can do to dashboard
     // Otherwise go to login page
-    if (checkValidator == "false"){
+    if (checkValidator == "false") {
         res.render('user/login', { // renders views/user/login.handlebars
             layout: 'loginlayout.handlebars'
         })
-    }
-    else{
+    } else {
         res.redirect('/dashboard/main')
     }
 });
@@ -75,10 +74,10 @@ router.post('/login', (req, res) => {
                         res.redirect('/dashboard/main')
                     }
                 } else {
-                    // This is when password  is incorrect
+                    // If password is incorrect
                     // Increase counter by 1
                     let updatedFailedCounter = user.failedCounter + 1
-                    
+
                     // Once counter hit to 3, proceed to deactivate the user account
                     // Update all of this to database and direct to login page
                     let updatedStatus = 1
@@ -100,7 +99,7 @@ router.post('/login', (req, res) => {
                     })
                 }
             } else {
-                // No user found will also direct to login page
+                // If no user found will also direct to login page
                 res.render('user/login', {
                     layout: 'loginlayout.handlebars',
                     errors: errors,
@@ -116,25 +115,24 @@ router.get('/addUser', async function(req, res) {
     const title = 'Add User';
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-    
+
     // If session is invalid then direct to login page
-    if (checkValidatorSession == "false"){
+    if (checkValidatorSession == "false") {
         res.redirect('/user/login')
     }
     // If valid we need to check user type
-    else if (checkValidatorSession == "true"){
+    else if (checkValidatorSession == "true") {
 
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
-        // If cleaner direct to dashboard as they cannot add user
-        // If supervisor direct to add user page
-        if (checkValidatorUser == "cleaner"){
+            // If cleaner direct to dashboard as they cannot add user
+            // If supervisor direct to add user page
+        if (checkValidatorUser == "cleaner") {
             res.redirect('/dashboard/main')
-        }
-        else if (checkValidatorUser == "supervisor"){
-            res.render('user/addUser', { 
-                type: "supervisor",
-                title: title 
-            }) // renders views/user/adduser.handlebars (webpage to key in new user info)
+        } else if (checkValidatorUser == "supervisor") {
+            res.render('user/addUser', {
+                    type: "supervisor",
+                    title: title
+                }) // renders views/user/adduser.handlebars (webpage to key in new user info)
         }
     }
 });
@@ -161,7 +159,7 @@ router.post('/addUser', (req, res) => {
 
     // Pre submission checks for password strength from password validator
     if (schema.validate(confirmPassword) == false) {
-        regError.push("Password not allow. It must contain at least 1 uppercase, 1 lowercase, 1 digit and 1 special character.") //Check for bad and weak password
+        regError.push("Password not allow. It must contain at least 1 uppercase, 1 lowercase, 1 digit and 1 special character.") //Check for weak password
     }
 
 
@@ -201,28 +199,26 @@ router.post('/addUser', (req, res) => {
 router.get('/userManagement', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-    
+
     // Perform same validation check for session and user again
-    if (checkValidatorSession == "false"){
+    if (checkValidatorSession == "false") {
         res.redirect('/user/login')
-    }
-    else if (checkValidatorSession == "true"){
+    } else if (checkValidatorSession == "true") {
 
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
 
-        if (checkValidatorUser == "cleaner"){
+        if (checkValidatorUser == "cleaner") {
             res.redirect('/dashboard/main')
-        }
-        else if (checkValidatorUser == "supervisor"){
+        } else if (checkValidatorUser == "supervisor") {
             User.findAll({}).then(user => { //find all users
-                if (user != undefined) { //pagination
-                    const userlist = user;
-                    res.render('user/userManagement', { //render page
-                        "user": userlist,
-                        type: "supervisor"
-                    })
-                }
-            }) // renders views/user/userManagement.handlebars
+                    if (user != undefined) { //pagination
+                        const userlist = user;
+                        res.render('user/userManagement', { //render page
+                            "user": userlist,
+                            type: "supervisor"
+                        })
+                    }
+                }) // renders views/user/userManagement.handlebars
         }
     }
 });
@@ -231,56 +227,53 @@ router.get('/userManagement', async function(req, res) {
 router.get('/updatestatus/:id', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-    
+
     // Perform same validation check for session and user again
-    if (checkValidatorSession == "false"){
+    if (checkValidatorSession == "false") {
         res.redirect('/user/login')
-    }
-    else if (checkValidatorSession == "true"){
+    } else if (checkValidatorSession == "true") {
 
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
 
-        if (checkValidatorUser == "cleaner"){
+        if (checkValidatorUser == "cleaner") {
             res.redirect('/dashboard/main')
-        }
-        else if (checkValidatorUser == "supervisor"){
-                User.findOne({ where: { userId: req.params.id } })
+        } else if (checkValidatorUser == "supervisor") {
+            User.findOne({ where: { userId: req.params.id } })
                 .then(user => {
-                    if (user){
+                    if (user) {
                         var stat = user.status; // Initialise the user status from db
                         if (stat == 1) {
                             var newstat = 0; // If button click make status deactive
                         } else {
                             var newstat = 1; // If button click make status active
                         }
-                        
+
                         if (stat == 0) {
                             var stat = 1 // If button click make status active, opposite from status
                         } else {
                             var stat = 0 // If button click make status deactive, opposite from status
                         }
-            
+
                         User.update({
-                            status: newstat, // Update new status and the button value
-                        }, {
-                            where: {
-                                userID: req.params.id // FInd the user who is being changed
-                            }
-                        })
-                        .then(() => { // alert success update
-                            res.send(`
+                                status: newstat, // Update new status and the button value
+                            }, {
+                                where: {
+                                    userID: req.params.id // FInd the user who is being changed
+                                }
+                            })
+                            .then(() => { // alert success update
+                                res.send(`
                                 <script>alert("Changes made successfully saved")
                                 setTimeout(window.location = "/user/userManagement", 1000)</script>
                             `);
-                        })
-                    }
-                    else{ // Alrt user not found
+                            })
+                    } else { // Alert if user not found
                         res.send(`
                                 <script>alert("UserId not found")
                                 setTimeout(window.location = "/user/userManagement", 1000)</script>
                             `);
                     }
-                    
+
                 })
         }
     }
@@ -289,19 +282,19 @@ router.get('/updatestatus/:id', async function(req, res) {
 // logout
 router.get('/logout', async function(req, res) {
     // Destroy the session based on the userId
-    
+
     let logoutCookie = req.cookies.new_cookie // get that specific cookies
     await Session.findOne({ where: { session_id: logoutCookie } })
-    .then(function(session) {
-        session.destroy()
-        res.clearCookie("recycling_session");
-        res.clearCookie("new_cookie");
-        req.session.destroy()
-    })
+        .then(function(session) {
+            session.destroy()
+            res.clearCookie("recycling_session");
+            res.clearCookie("new_cookie");
+            req.session.destroy()
+        })
     res.send(`
         <script>alert("You have successfully logged out")
         setTimeout(window.location = "/user/login", 1000)</script>
     `);
-    
+
 })
 module.exports = router

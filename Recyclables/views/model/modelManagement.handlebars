@@ -179,6 +179,7 @@ label img {
 </form>
 
 <script>
+  // get all photos in folder and display them as images in checkboxes 
   var list = '{{list}}'
   var listarray = list.split(",")
   if (listarray.length > 1){
@@ -188,7 +189,7 @@ label img {
     document.getElementById("list").innerHTML += "<li><figure><input class='checkboxes' name='checkbox[]' type='checkbox' id='" + imgfile + "' /><label for='" + imgfile + "'><img src='/img/" + imgfile + "' /></label><figcaption style='text-align:center;'>" + type + "</figcaption></figure></li>"
   }
   }
- 
+  //calls the route to change material type in images for images that are checked
   function changeMaterial(){
     var checkbox = document.getElementsByClassName("checkboxes")
     checkbox = document.querySelectorAll('input[class=checkboxes]:checked');
@@ -207,6 +208,7 @@ label img {
           });
           location.reload();
     }
+  //calls the route to delete checked images
 
     function deleteImage(){
     var checkbox = document.getElementsByClassName("checkboxes")
