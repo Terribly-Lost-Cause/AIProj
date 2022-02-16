@@ -8,7 +8,7 @@ const saltRounds = 10;
 const Session = require('../models/session');
 var passwordValidator = require('password-validator');
 
-//const { UUID } = require('sequelize/types');
+// Intialise the password validator we will be using
 var schema = new passwordValidator();
 schema
     .is().min(8) // Minimum length 8
@@ -20,8 +20,11 @@ schema
 // User login get and post
 router.get('/login', async function(req, res) {
     const title = 'Login';
+    // This is to check for session valid or not
     var checkValidator = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
 
+    // If session valid then can do to dashboard
+    // Otherwise go to login page
     if (checkValidator == "false"){
         res.render('user/login', { // renders views/user/login.handlebars
             layout: 'loginlayout.handlebars'
@@ -43,6 +46,9 @@ router.post('/login', (req, res) => {
                 if (bcrypt.compareSync(password, user.hash)) { // If matching password can proceed
                     if (user.status == 1) { // If status is active then we can log in the user, go to the main dashboard
 
+                        // THen we will create a new cookie with expiration date to store in browser
+                        // We also store inside the database.
+                        // Will be used to validation session afterwards
                         let userId = user.userId;
                         req.session.userId = userId;
                         let session_id = uuid.uuid()
@@ -59,6 +65,7 @@ router.post('/login', (req, res) => {
                             data
                         })
 
+                        // Reset failed counter when success login and direct to dashboard
                         User.update({
                             failedCounter: 0
                         }, {
@@ -68,8 +75,12 @@ router.post('/login', (req, res) => {
                         res.redirect('/dashboard/main')
                     }
                 } else {
+                    // This is when password  is incorrect
+                    // Increase counter by 1
                     let updatedFailedCounter = user.failedCounter + 1
-                    console.log(updatedFailedCounter)
+                    
+                    // Once counter hit to 3, proceed to deactivate the user account
+                    // Update all of this to database and direct to login page
                     let updatedStatus = 1
                     if (updatedFailedCounter >= 3) {
                         updatedStatus = 0
@@ -89,6 +100,7 @@ router.post('/login', (req, res) => {
                     })
                 }
             } else {
+                // No user found will also direct to login page
                 res.render('user/login', {
                     layout: 'loginlayout.handlebars',
                     errors: errors,
@@ -105,13 +117,16 @@ router.get('/addUser', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
     
+    // If session is invalid then direct to login page
     if (checkValidatorSession == "false"){
         res.redirect('/user/login')
     }
+    // If valid we need to check user type
     else if (checkValidatorSession == "true"){
 
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
-
+        // If cleaner direct to dashboard as they cannot add user
+        // If supervisor direct to add user page
         if (checkValidatorUser == "cleaner"){
             res.redirect('/dashboard/main')
         }
@@ -127,6 +142,7 @@ router.get('/addUser', async function(req, res) {
 
 router.post('/addUser', (req, res) => {
     let regError = []; // Initialise error array
+    // Get all the fields from the form and generate any predefined variable to store in db
     let userId = uuid.uuid();
     let name = req.body.name;
     let type = req.body.type;
@@ -138,11 +154,12 @@ router.post('/addUser', (req, res) => {
     let status = 1;
     let failedCounter = 0
 
-    // Pre submission checks for password
+    // Pre submission checks for matching password
     if (plainPassword != confirmPassword) {
         regError.push("Passwords do not match")
     }
 
+    // Pre submission checks for password strength from password validator
     if (schema.validate(confirmPassword) == false) {
         regError.push("Password not allow. It must contain at least 1 uppercase, 1 lowercase, 1 digit and 1 special character.") //Check for bad and weak password
     }
@@ -151,17 +168,18 @@ router.post('/addUser', (req, res) => {
     User.findOne({ where: { name: name } })
         .then(user => {
             if (user)
+            // If the user has already exist in database, return error
                 regError.push(name + " has been registered. Please use another unique username.\n") // user has been used, error
 
 
-            if (regError.length > 0) { // see if there is error, exclude first one
+            if (regError.length > 0) { // see if there is error, exclude first one. If have direct back page
                 res.render('user/addUser', {
                     layout: 'main.handlebars',
                     regError: regError,
                     type: "supervisor"
                 });
             } else {
-                // To insert a record into the User table
+                // If no error, proceed to insert a record into the User table
                 User.create({
                         userId,
                         name,
@@ -184,6 +202,7 @@ router.get('/userManagement', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
     
+    // Perform same validation check for session and user again
     if (checkValidatorSession == "false"){
         res.redirect('/user/login')
     }
@@ -203,16 +222,17 @@ router.get('/userManagement', async function(req, res) {
                         type: "supervisor"
                     })
                 }
-            }) // renders views/user/userManagement.handlebars (webpage to key in new user info)
+            }) // renders views/user/userManagement.handlebars
         }
     }
 });
 
-// get update status
+// The route to update the user status
 router.get('/updatestatus/:id', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
     
+    // Perform same validation check for session and user again
     if (checkValidatorSession == "false"){
         res.redirect('/user/login')
     }
@@ -233,7 +253,7 @@ router.get('/updatestatus/:id', async function(req, res) {
                         } else {
                             var newstat = 1; // If button click make status active
                         }
-                        var stt = user.action; // Initialise the button value from the db
+                        
                         if (stat == 0) {
                             var stat = 1 // If button click make status active, opposite from status
                         } else {
@@ -242,7 +262,6 @@ router.get('/updatestatus/:id', async function(req, res) {
             
                         User.update({
                             status: newstat, // Update new status and the button value
-                            //action: stt
                         }, {
                             where: {
                                 userID: req.params.id // FInd the user who is being changed
@@ -255,7 +274,7 @@ router.get('/updatestatus/:id', async function(req, res) {
                             `);
                         })
                     }
-                    else{
+                    else{ // Alrt user not found
                         res.send(`
                                 <script>alert("UserId not found")
                                 setTimeout(window.location = "/user/userManagement", 1000)</script>
@@ -285,42 +304,4 @@ router.get('/logout', async function(req, res) {
     `);
     
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//type: "supervisor"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 module.exports = router
