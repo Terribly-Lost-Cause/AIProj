@@ -10,6 +10,8 @@ router.use(function(req, res, next) {
     console.log(req.path);
     next();
 });
+
+// Initialise all the routes available with the file name
 router.use('/user', userRoute)
 router.use('/dashboard', dashboardRoute)
 router.use('/bin', binRoute)
@@ -21,6 +23,7 @@ router.get('/logout', (req, res) => {
     res.redirect("/user/login")
 });
 
+// Set a default path to go to user/login
 router.get("/", (req, res) => {
     res.redirect("/user/login")
 })

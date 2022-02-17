@@ -17,13 +17,15 @@ import uuid
 import os
 
 from sqlalchemy import null
-
+#delay in taking screenshot upon detecting motion
 TIMER = int(1)
+#open camera in ip webcam and initialize variable
 cap = cv2.VideoCapture(0)
-address = "https://192.168.129.86:8080//video"
+address = "https://192.168.1.95:8080//video"
 cap.open(address)
 frame_width = int( cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height =int( cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
+#initialize microbit port and variables
 PID_MICROBIT = 516
 VID_MICROBIT = 3368
 TIMEOUT = 1000
@@ -32,6 +34,7 @@ secoonds = 10000000
 trial = 0
 ret, frame1 = cap.read()
 ret, frame2 = cap.read()
+#select a bin for live updating of current_plastic/current_metal level (for demo only)
 bin_id = "e67dac91-60c2-4bf5-90de-2e6c61be8c5a"
 #print(frame1.shape)
 
@@ -66,6 +69,7 @@ def find_comport(pid, vid, baud):
 
 def main(file, bin_id):   
     print("start")
+    #open microbit port and initialize variables
     ser_micro.open()
     servodelimiter = " "
     material = " "
@@ -78,6 +82,7 @@ def main(file, bin_id):
 
     while status == "":
         try:
+            #call AI in docker
             url = "http://127.0.0.1:8080/predictRecyclableClass"
             files = {'file': open(file, 'rb')}
 
@@ -88,15 +93,16 @@ def main(file, bin_id):
                 result = prediction.items()
                 for key, value in result:
                     score = value[0].items()
+                #get the predicted material type and confidence score for item in screenshot
                 material = prediction["result"][0]["name"]
                 score = prediction["result"][0]["score"]
-                
+                #get the current record of bin for bin_id (line 38)
                 retrievecursor = mydb.cursor()
                 retrievesql = "SELECT * FROM bins WHERE bin_id = %s"
                 retrieveval = (bin_id)
                 retrievecursor.execute(retrievesql, (retrieveval,))
                 myresult = retrievecursor.fetchall()
-
+                #initalize/get variables
                 current_plastic = 0
                 current_metal = 0
                 overall_plastic = 0
@@ -106,6 +112,7 @@ def main(file, bin_id):
                     current_metal = x[8]
                     overall_plastic = x[5]
                     overall_metal = x[6]
+                    #increments the number in overall and current metal/plastic in database based on prediction
                 if (material == "plastic"):
                     current_plastic = current_plastic + 1
                     overall_plastic = overall_plastic+1
@@ -122,8 +129,7 @@ def main(file, bin_id):
                     updateval = (current_metal, overall_metal ,bin_id)
                     updatecursor.execute(updatesql, updateval)
                     mydb.commit()
-                
-                #shutil.move(file, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4()))
+                #send the instructions on where to turn to microbit 
                 ser_micro.write(servodelimiter.encode('utf-8') + material.encode('utf-8'))
                 
                 status = True
@@ -145,28 +151,28 @@ def main(file, bin_id):
     ser_micro.close()
     return status, material, score
 
-def takeSS(cap, TIMER, trial):     
-    # Read and display each frame
-    
-    prev = time.time()
+#function to take screenshot
+def takeSS(cap, TIMER, trial):
+    #count number of frames to keep track of time
 
+    # previous time
+    prev = time.time()
     while TIMER >= 0:
         ret, img = cap.read()
-        # Display countdown on each frame
-        # specify the font and draw the
         
+        # current time
         cur = time.time()
-
+        
         # Update and keep track of Countdown
-        # if time elapsed is one second
+        # if time elapsed is greater than or equals to one second
         # than decrease the counter
         if cur-prev >= 1:
             prev = cur
             TIMER = TIMER-1
-
+        #otherwise take the screenshot
     else:
         ret, img = cap.read()
-
+        #takes screenshot and name it with format
         trial += 1
         filename = './microbit/'+str(trial) + '.jpg'
         cv2.imwrite(filename, img)
@@ -179,7 +185,7 @@ if not ser_micro:
     print('microbit not found')
 print('opening and monitoring microbit port')
 
-
+#constantly checking for movement by comparing difference in contours between frames
 while cap.isOpened():
     diff = cv2.absdiff(frame1, frame2)
     gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
@@ -187,24 +193,29 @@ while cap.isOpened():
     _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)
     dilated = cv2.dilate(thresh, None, iterations=3)
     contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    #if difference between contours of area exceeds a threhold, call the screenshot function 
     for contour in contours:
         if cv2.contourArea(contour) < 3:
             trial+=1
             image = cv2.resize(frame1, (1280,720))
             filename, img = takeSS(cap, TIMER, trial)
+            #initialises status and material type
             status = "error"
             material = ""
             try:
+                # Call prediction function and get material and score result
                 status,material,score = main(filename,bin_id)
                 time.sleep(1)
 
-                print(material + ": "+float(score))
+                print(material + ": "+str(score))
+                # when it is metal/plastic and score not confident we store them in the local project where website can access and display
                 if (material == "metal" and float(score) > 0.3):
                     material = "Metal"
                     shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
                 elif (material == "plastic"  and float(score) < 0.7):
                     material = "Plastic"
                     shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
+                #If good confidence then delete the images    
                 else:
                     os.remove(filename)
 

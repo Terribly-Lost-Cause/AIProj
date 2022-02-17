@@ -13,7 +13,7 @@ router.get('/main', async function(req, res) {
     const title = 'Overall Dashboard';
     var https = require('https');
 
-
+    // Perform same validation check for session and user again
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
 
     if (checkValidatorSession == "false") {
@@ -32,17 +32,23 @@ router.get('/main', async function(req, res) {
                     res.on('data', function(d) { process.stdout.write(d); });
                 }).on('error', function(e) { console.error(e); });
 
+                // Retrieve all the bin information here
                 let binid = oldbinlist[i].bin_id
                 let status = oldbinlist[i].status
                 let curPlastic = oldbinlist[i].current_plastic
                 let curMetal = oldbinlist[i].current_metal
                 let threshold = oldbinlist[i].threshold
 
+                // Calculate the plastic and metal level based on percentage
                 let plastic_level = curPlastic / threshold * 100
                 let metal_level = curMetal / threshold * 100
 
+                // When inactive we dont update it
+                // We only update the bins that are active or alert or danger
                 if (status != 0) {
 
+                    // Since the idea is to display status based on  level
+                    // We will take the level of the bin that is of higher value
                     let level_update = null;
                     if (plastic_level > metal_level) {
                         level_update = plastic_level
@@ -50,7 +56,7 @@ router.get('/main', async function(req, res) {
                         level_update = metal_level
                     }
 
-
+                    // Based on the higher level bin, update the new status into database
                     if (level_update < 50) {
                         updatedstatus = 1
                     } else if ((level_update >= 50 && level_update < 75)) {
@@ -66,11 +72,10 @@ router.get('/main', async function(req, res) {
                         }
                     })
                 }
-
-
             }
         })
 
+        // After finish all the updates, now get all the bins available
         Bin.findAll({}).then(newbin => { //find all recyclables bins available
             const binlist = newbin;
 
@@ -79,6 +84,8 @@ router.get('/main', async function(req, res) {
             var dangerlist = [];
             var alertlist = [];
 
+            // Sort them into the various status array
+            // If inactive remove the live feed video, replace with no video png
             for (var i = 0; i < binlist.length; i++) {
                 if (binlist[i].status == 0) {
                     binlist[i].status = "Inactive"
@@ -96,6 +103,7 @@ router.get('/main', async function(req, res) {
                 }
             }
 
+            // This is to sort the array by descending order using the plastic and metal levels
             inactivelist.sort((a, b) => ((b.current_plastic / b.threshold * 100) + (b.current_metal / b.threshold * 100)) - ((a.current_plastic / a.threshold * 100) + (a.current_metal / a.threshold * 100)))
             activelist.sort((a, b) => ((b.current_plastic / b.threshold * 100) + (b.current_metal / b.threshold * 100)) - ((a.current_plastic / a.threshold * 100) + (a.current_metal / a.threshold * 100)))
             dangerlist.sort((a, b) => ((b.current_plastic / b.threshold * 100) + (b.current_metal / b.threshold * 100)) - ((a.current_plastic / a.threshold * 100) + (a.current_metal / a.threshold * 100)))
@@ -120,6 +128,8 @@ router.get('/main', async function(req, res) {
         })
     }
 });
+
+
 router.get("/location", async(req, res) => {
 
     let checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
@@ -193,11 +203,13 @@ router.get("/viewChart", async(req, res) => {
     }
 })
 
+
+// This route is to update the bins is realtime
 router.get('/getbin/:id', async function(req, res) {
 
     var checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
-        //var message = await require("../utils/sms")("description", "level", "newupdatedstatus")
 
+    // Perform same validation check for session and user again
     if (checkValidatorSession == "false") {
         res.redirect('/user/login')
     } else if (checkValidatorSession == "true") {
@@ -205,7 +217,7 @@ router.get('/getbin/:id', async function(req, res) {
         var checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
         await Bin.findOne({ where: { bin_id: req.params.id } }) //find all recyclables bins available
             .then(bin => {
-                if (bin) { //
+                if (bin) { // if bin exist get all the current bin information
 
                     let status = bin.status
                     let curPlastic = bin.current_plastic
@@ -215,11 +227,15 @@ router.get('/getbin/:id', async function(req, res) {
                     let level = bin.floor_level
                     let ipcamera = bin.camera_ipaddress
 
+                    // Calculate the plastic and metal level based on %
                     let newplastic_level = curPlastic / threshold * 100
                     let newmetal_level = curMetal / threshold * 100
 
+                    // If inactive we dont update
+                    // Only update when the staus is active, alert or danger
                     if (status != 0) {
 
+                        // Get the value for the level that is higher
                         let level_update = null;
                         if (newplastic_level > newmetal_level) {
                             level_update = newplastic_level
@@ -227,6 +243,7 @@ router.get('/getbin/:id', async function(req, res) {
                             level_update = newmetal_level
                         }
 
+                        // Update the new status into db
                         let newupdatedstatus = 0
                         if (level_update < 50) {
                             newupdatedstatus = 1
@@ -238,13 +255,16 @@ router.get('/getbin/:id', async function(req, res) {
 
                         }
 
+                        // If there is no change in status, nothing to do
                         let tochange = false
                         if (status == newupdatedstatus) {
                             tochange = true
 
                         } else {
+                            // If the change in status in positive aka active -> alert/danger
                             if (newupdatedstatus - status > 0) {
 
+                                // Initialise the sms provider which is twilio
                                 const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
                                 if (newupdatedstatus == 2) {
                                     var urgency = "The bin is about to be overfilled with recyclables."
@@ -257,6 +277,8 @@ router.get('/getbin/:id', async function(req, res) {
                                     .then(validation_request => console.log(validation_request.friendlyName))
                                     .catch(err => console.log(err));
 
+                                // Create the sms to be send with all the required information of the bin
+                                // Here the to part, we set a default number to show it works and to save on free trial credits
                                 client.messages
                                     .create({
                                         body: 'Please clear the trash at ' + description + ' level ' + level + '. ' + urgency,
@@ -264,8 +286,6 @@ router.get('/getbin/:id', async function(req, res) {
                                         to: '+6598209042'
                                     })
                                     .then(message => console.log(message.sid));
-
-
                             }
 
                         }
@@ -288,6 +308,7 @@ router.get('/getbin/:id', async function(req, res) {
                                 }
                             })
 
+                        // Send the necessary information back to the ajax caller from html
                         res.send({ newplastic_level: newplastic_level, newmetal_level: newmetal_level, newupdatedstatus: newupdatedstatus, tochange: tochange, status: status, description: description, level: level, ipcamera: ipcamera });
 
                     } else {
