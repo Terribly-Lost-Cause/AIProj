@@ -132,15 +132,17 @@ router.get('/main', async function(req, res) {
 
 router.get("/location", async(req, res) => {
 
+    //Validate request
     let checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
 
     if (checkValidatorSession == "false") return res.redirect("/user/login")
     else if (checkValidatorSession != "true") return res.redirect("/user/login?how=did_you_get_here");
 
     let newbin = await Bin.findAll({})
-        //find all recyclables bins available
+    //find all recyclables bins available
     let binlist = newbin;
 
+    //Add status
     for (var i = 0; i < binlist.length; i++) {
 
         switch (binlist[i].status) {
@@ -161,6 +163,7 @@ router.get("/location", async(req, res) => {
     }
 
 
+    //Return appropriate template
     let checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
 
     if (checkValidatorUser == "cleaner") {
@@ -174,21 +177,20 @@ router.get("/location", async(req, res) => {
         })
     }
 })
-router.get("/viewChart", async(req, res) => {
 
+router.get("/viewChart", async(req, res) => {
+    //validate request
     let checkValidatorSession = await require("../utils/validation_session")(req.session.userId, req.cookies.new_cookie)
 
     if (checkValidatorSession == "false") return res.redirect("/user/login")
     else if (checkValidatorSession != "true") return res.redirect("/user/login?how=did_you_get_here");
 
-    console.log("reee");
+    //get data
     let crowdData = await crowdRecord.findAll();
-    console.log("rarwa");
     let binList = await Bin.findAll();
-
-
     let checkValidatorUser = await require("../utils/validation_user")(req.session.userId)
 
+    //return appropriate template
     if (checkValidatorUser == "cleaner") {
         res.render('user/chart', { //render page
             binlist: JSON.stringify(binList),

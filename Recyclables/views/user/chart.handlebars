@@ -128,7 +128,7 @@
 <script>
 var currentView = null;
 
-
+//Define chart
 let hourViewChart = new Chart(document.getElementById("chartHourView"), {
   type: 'line',
   data: {
@@ -187,9 +187,14 @@ let monthViewChart = new Chart(document.getElementById("chartMonthView"), {
     }
   }
 });
+
+
+//Define vars
 let viewList = {{{binlist}}}
 let crowdData = {{{crowdData}}}
 let s = new URLSearchParams(window.location.search);
+
+//Url parms ?loc=
 if(s.has("loc")){
     let stop = false;
     for(let i in viewList){
@@ -201,8 +206,12 @@ if(s.has("loc")){
     }
     if(stop==false)switchView(0)
 }else switchView(0);
+
+
+//Loading views
 function loadViewList(activeView){
 
+    //Clear div and readd elements
     $("#divViewList").html("");
     for(let view in viewList){
         $("#divViewList").append(`
@@ -214,6 +223,7 @@ function loadViewList(activeView){
 
     }
     
+    //reset event
     $(".divViewSelectItem, .divViewSelectItem span").click((e)=>{
         if(e.target.tagName.toLowerCase() == "span") return e.target.parentElement.click(); 
         let tgt = $(e.target)
@@ -222,9 +232,16 @@ function loadViewList(activeView){
 
 
 }
+
+//Switch view
 function switchView(view){
+
+    //Update view list
     currentView = view;
     loadViewList(view)
+
+
+    //Update chart
     let labels = [], data = [];
     labels = Array.from({length: 24}, (_, i) => ((i * 1)<10)?"0"+(i*1)+":00":(i*01)+":00");
     data = Array(24).fill(0);

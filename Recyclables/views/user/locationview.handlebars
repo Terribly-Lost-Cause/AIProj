@@ -163,6 +163,8 @@
 
 <script>
 
+
+//Init vars
 var maxScreenshotMs = 10000;
 var state = 0;
 var detectionSensitivity = 10;
@@ -175,6 +177,9 @@ $("#spanDetectSensitivity").text("Detection sensitivity: " + detectionSensitivit
 
 
 let viewList = {{{binlist}}}
+
+
+//Handle URL query ?loc=
 let s = new URLSearchParams(window.location.search);
 if(s.has("loc")){
     let stop = false;
@@ -187,8 +192,10 @@ if(s.has("loc")){
     }
     if(stop==false)switchView(0)
 }else switchView(0);
-function loadViewList(activeView){
 
+//Load view list - called on viewlist refresh
+function loadViewList(activeView){
+    //readd elements
     $("#divViewList").html("");
     for(let view in viewList){
         $("#divViewList").append(`
@@ -200,6 +207,7 @@ function loadViewList(activeView){
 
     }
     
+    //reset event
     $(".divViewSelectItem, .divViewSelectItem span").click((e)=>{
         if(e.target.tagName.toLowerCase() == "span") return e.target.parentElement.click(); 
         let tgt = $(e.target)
@@ -208,13 +216,19 @@ function loadViewList(activeView){
 
 
 }
+//increase progress bar - called every 100ms
 function increaseProgress(){
+
+    //Set progress bar value
     $("#progressNextScreenshot").attr("aria-valuenow",  parseInt($("#progressNextScreenshot").attr("aria-valuenow"))+100)
     $("#progressNextScreenshot").css("width",  (parseInt($("#progressNextScreenshot").attr("aria-valuenow"))/maxScreenshotMs*100)+"%")
+
+    //take picture if full
     if(parseInt($("#progressNextScreenshot").attr("aria-valuenow")) > maxScreenshotMs){
         $("#progressNextScreenshot").attr("aria-valuenow", 0)
         takepicture()
     }
+    //switch statement for progress bar text and color
     switch(state){
         case 0:
             $("#progressNextScreenshot").removeClass("bg-info")
@@ -238,16 +252,27 @@ function increaseProgress(){
     }
 }
 
+//change camera etc
 function switchView(view){
+
+    //Update view list
     currentView = view;
     loadViewList(view)
+
+
+
+    //set website
     $("#btnViewCrowd").attr("href", "/dashboard/viewchart?loc=" + viewList[currentView].bin_id)
+
+    //test videos
     var randomVids = [
         "/video/1.mp4",
         "/video/2.mp4",
         "/video/3.mp4",
         "/video/4.mp4",
     ]
+
+    //Set video source
     if(view != 0){
         video.srcObject = null;
         $("video").attr("src", randomVids[getRndInteger(0, randomVids.length)])
@@ -262,6 +287,8 @@ function switchView(view){
             });
         }
     }
+
+
     updateCrowdLevel()
     $("#img2").attr('src', "");}
 function getRndInteger(min, max) {
@@ -274,7 +301,11 @@ function updateCrowdLevel(){
     $("#spanCrowdLevel").text(`Crowd Level: ${viewList[currentView].crowdFill}/${viewList[currentView].crowdThreshold} (${parseInt(viewList[currentView].crowdFill/viewList[currentView].crowdThreshold)*100}%)`)
 }
 
+
+//convert video img to canvas screenshot and send pic
 function takepicture() {
+
+    //Create screenshot canvas
     state = 1;
     var canvas = document.createElement('canvas');
     canvas.width = 640;
@@ -286,6 +317,7 @@ function takepicture() {
     var data = canvas.toDataURL('image/jpeg');
 
 
+    //Send image to api
     $.ajax({
         url: 'http://localhost:81/image',
         type: 'post',
@@ -293,19 +325,25 @@ function takepicture() {
             img: data
         },
         success: function(response){
+
+            //Update image
             state = 2;
             
             dataUrl = (response.img.slice(0, 2)=="b'")?response.img.slice(2):response.img;
             dataUrl = (dataUrl[dataUrl.length-1]=="'")?dataUrl.slice(0, -1):dataUrl;
             $("#img2").attr("src", "data:image/png;base64," + dataUrl)
+
+
+            //Update statistics bar
             let count = 0, averageScore = 0;
             for (let x in response.scores){
-                //console.log(response.sx);
                 if(response.scores[x] >= detectionSensitivity){
                     count += 1;
                     averageScore += response.scores[x];
                 }
             }
+
+            //Update charts
             pplCountChart.data.labels.push((new Date()).toLocaleTimeString())
             pplCountChart.data.datasets[0].data.push(count)
             pplCountChart.update()
@@ -326,6 +364,7 @@ function takepicture() {
                 state=0
             }, 1000)
 
+            //Send request back to webserer that req was complete to increase bin level
             $.ajax({
                 url: '/bin/updatetraffic',
                 type: 'post',
@@ -335,7 +374,6 @@ function takepicture() {
 
                 },
                 success: function(response){
-                    console.log("success")
                     viewList[currentView].crowdFill += parseInt(count);
                     updateCrowdLevel();
                 },
@@ -350,6 +388,7 @@ function takepicture() {
     });
 }
 
+//Define chart
 let pplCountChart = new Chart(document.getElementById("chartPeopleCount"), {
   type: 'line',
   data: {
