@@ -10,6 +10,7 @@
     "author": "Chang Zu He, Lim Zi Chen Cavell, Ang Kai Xin",
     "license": "ISC",
     "dependencies": {
+        "adm-zip": "^0.5.9",
         "bcrypt": "^5.0.1",
         "body-parser": "^1.18.3",
         "cookie-parser": "^1.4.4",
