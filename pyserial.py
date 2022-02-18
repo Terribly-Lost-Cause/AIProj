@@ -21,7 +21,7 @@ from sqlalchemy import null
 TIMER = int(1)
 #open camera in ip webcam and initialize variable
 cap = cv2.VideoCapture(0)
-address = "https://192.168.1.95:8080//video"
+address = "https://172.27.188.254:8080//video"
 cap.open(address)
 frame_width = int( cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height =int( cap.get( cv2.CAP_PROP_FRAME_HEIGHT))
@@ -211,10 +211,10 @@ while cap.isOpened():
                 # when it is metal/plastic and score not confident we store them in the local project where website can access and display
                 if (material == "metal" and float(score) > 0.3):
                     material = "Metal"
-                    shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
+                    shutil.move(filename, './Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
                 elif (material == "plastic"  and float(score) < 0.7):
                     material = "Plastic"
-                    shutil.move(filename, 'C:/Users/ASUS/Desktop/microbot/Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
+                    shutil.move(filename, './Recyclables/public/img/' + material + "_microbit_" + str(uuid.uuid4())+".jpg")
                 #If good confidence then delete the images    
                 else:
                     os.remove(filename)
